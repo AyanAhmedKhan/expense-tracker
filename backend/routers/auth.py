@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 import os
 try:
@@ -15,6 +16,7 @@ import schemas, models, crud
 from database import get_db
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+logger = logging.getLogger("auth")
 
 # Security config
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
@@ -53,9 +55,11 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 @router.post("/signup", response_model=schemas.Token)
 def signup(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
+    logger.info(f"Signup attempt for {user_data.email}")
     # Check if user exists
     existing = db.query(models.User).filter(models.User.email == user_data.email).first()
     if existing:
+        logger.warning(f"Signup failed: email already registered {user_data.email}")
         raise HTTPException(status_code=400, detail="Email already registered")
     
     # Create user
@@ -67,25 +71,32 @@ def signup(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
+    logger.info(f"User created: id={user.id} email={user.email}")
     
     # Generate token
     token = create_access_token({"sub": user.email})
+    logger.info(f"Signup success token issued for {user.email}")
     return {"access_token": token, "token_type": "bearer"}
 
 @router.post("/login", response_model=schemas.Token)
 def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
+    logger.info(f"Login attempt for {credentials.email}")
     user = db.query(models.User).filter(models.User.email == credentials.email).first()
     if not user or not user.password_hash:
+        logger.warning(f"Login failed for {credentials.email}: no user or no password")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     if not verify_password(credentials.password, user.password_hash):
+        logger.warning(f"Login failed for {credentials.email}: bad password")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     token = create_access_token({"sub": user.email})
+    logger.info(f"Login success token issued for {user.email}")
     return {"access_token": token, "token_type": "bearer"}
 
 @router.post("/google", response_model=schemas.Token)
 def google_login(google_data: schemas.GoogleLogin, db: Session = Depends(get_db)):
+    logger.info("Google login attempt")
     try:
         from google.oauth2 import id_token
         from google.auth.transport import requests
@@ -123,6 +134,7 @@ def google_login(google_data: schemas.GoogleLogin, db: Session = Depends(get_db)
             if not user.google_id:
                 user.google_id = google_id
                 db.commit()
+            logger.info(f"Google login existing user {email}")
         else:
             # Create new user
             user = models.User(
@@ -134,6 +146,7 @@ def google_login(google_data: schemas.GoogleLogin, db: Session = Depends(get_db)
             db.add(user)
             db.commit()
             db.refresh(user)
+            logger.info(f"Google login created user {email}")
         
         # Generate JWT token
         token = create_access_token({"sub": user.email})
@@ -142,10 +155,13 @@ def google_login(google_data: schemas.GoogleLogin, db: Session = Depends(get_db)
     except HTTPException:
         raise
     except ValueError as e:
+        logger.warning(f"Google login invalid token: {e}")
         raise HTTPException(status_code=400, detail=f"Invalid Google token: {e}")
     except Exception as e:
+        logger.error(f"Google auth failed: {e}")
         raise HTTPException(status_code=500, detail=f"Google authentication failed: {e}")
 
 @router.get("/me", response_model=schemas.User)
 def get_me(current_user: models.User = Depends(get_current_user)):
+    logger.info(f"Get me for {current_user.email}")
     return current_user
