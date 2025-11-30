@@ -1,5 +1,6 @@
 import logging
 from fastapi import FastAPI, Request
+from sqlalchemy import text
 from time import time
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
@@ -48,7 +49,7 @@ def on_startup():
     # Confirm DB connection on app startup
     try:
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
         logger.info("Startup DB connectivity OK")
     except Exception as e:
         logger.error(f"Startup DB connectivity failed: {e}")
@@ -58,7 +59,7 @@ def healthz():
     status = {"status": "ok", "db": "unknown"}
     try:
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
         status["db"] = "ok"
     except Exception as e:
         status["status"] = "error"

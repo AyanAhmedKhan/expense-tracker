@@ -1,6 +1,6 @@
 import os
 import logging
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -32,7 +32,7 @@ def get_db():
 logger = logging.getLogger("db")
 try:
     with engine.connect() as conn:
-        conn.execute("SELECT 1")
+        conn.execute(text("SELECT 1"))
         logger.info(f"Database connected: {SQLALCHEMY_DATABASE_URL}")
 except Exception as e:
     logger.error(f"Database connection failed: {e}")
