@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 import schemas, models, crud
 from database import get_db
 
-router = APIRouter(prefix="/api/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["auth"])
 logger = logging.getLogger("auth")
 
 # Security config
