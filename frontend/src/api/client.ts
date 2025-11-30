@@ -1,7 +1,16 @@
 import axios from 'axios';
 
+// Build a stable baseURL:
+// - If VITE_API_URL ends with '/api', use it as-is
+// - If VITE_API_URL is set but without '/api', append '/api'
+// - If not set, default to '/api' (dev proxy or same-origin backend)
+const baseEnv = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const baseURL = baseEnv
+    ? (baseEnv.endsWith('/api') ? baseEnv : `${baseEnv}/api`)
+    : '/api';
+
 const client = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || '/api',
+        baseURL,
 });
 
 client.interceptors.request.use((config) => {

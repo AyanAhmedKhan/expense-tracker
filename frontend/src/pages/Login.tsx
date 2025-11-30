@@ -32,7 +32,7 @@ const Login: React.FC = () => {
         setLoading(true);
 
         try {
-            const response = await client.post<{ access_token: string }>('/auth/login', {
+                const response = await client.post<{ access_token: string }>('/auth/login', {
                 email: formData.email,
                 password: formData.password
             });
@@ -69,7 +69,7 @@ const Login: React.FC = () => {
         setLoading(true);
 
         try {
-            const result = await client.post<{ access_token: string }>('/auth/google', {
+                const result = await client.post<{ access_token: string }>('/auth/google', {
                 token: response.credential
             });
 
