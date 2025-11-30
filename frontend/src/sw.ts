@@ -4,7 +4,7 @@
  */
 
 // Listen for messages (e.g., token updates) if needed in future.
-self.addEventListener('message', (event: any) => {
+self.addEventListener('message', () => {
   // Placeholder for receiving auth token if we decide to cache authenticated responses differently.
 });
 
