@@ -122,6 +122,7 @@ const Signup: React.FC = () => {
                                 required
                                 value={formData.name}
                                 onChange={handleChange}
+                                autoComplete="name"
                                 className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                 placeholder="Full name"
                             />
@@ -135,6 +136,7 @@ const Signup: React.FC = () => {
                                 required
                                 value={formData.email}
                                 onChange={handleChange}
+                                autoComplete="email"
                                 className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                 placeholder="Email address"
                             />
@@ -148,6 +150,7 @@ const Signup: React.FC = () => {
                                 required
                                 value={formData.password}
                                 onChange={handleChange}
+                                autoComplete="new-password"
                                 className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                 placeholder="Password (min 6 characters)"
                             />
@@ -161,6 +164,7 @@ const Signup: React.FC = () => {
                                 required
                                 value={formData.confirmPassword}
                                 onChange={handleChange}
+                                autoComplete="new-password"
                                 className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                 placeholder="Confirm password"
                             />

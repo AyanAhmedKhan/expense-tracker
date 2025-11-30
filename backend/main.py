@@ -32,8 +32,8 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
-# Support routes without '/api' prefix for compatibility
-app.include_router(auth.router, prefix="/auth")
+# Also expose under '/api' namespace for canonical API paths
+app.include_router(auth.router, prefix="/api")
 logger.info("Routers registered: /api/auth/* and /auth/*, plus expenses/reimbursements/statements/summary")
 app.include_router(statements.router)
 app.include_router(expenses.router)
