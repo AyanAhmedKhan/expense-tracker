@@ -1,0 +1,26 @@
+{
+  "name": "FinTrack - Expense & Reimbursement Tracker",
+  "short_name": "FinTrack",
+  "description": "Track expenses, manage reimbursements, and upload ICICI bank statements. Dark mode support, Google login, and offline access.",
+  "categories": ["finance", "productivity", "business"],
+  "theme_color": "#111827",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    { "src": "icons/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    {
+      "src": "icons/expense-tracker.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "FinTrack Dashboard"
+    }
+  ]
+}

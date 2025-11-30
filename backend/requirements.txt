@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+sqlalchemy
+alembic
+pydantic
+pdfplumber
+pandas
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+google-auth

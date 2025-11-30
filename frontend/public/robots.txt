@@ -1,0 +1,10 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Disallow authentication pages from indexing
+Disallow: /login
+Disallow: /signup
+
+# Sitemap location
+Sitemap: https://yourapp.com/sitemap.xml

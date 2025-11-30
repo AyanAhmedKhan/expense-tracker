@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Primary Meta Tags -->
+    <title>FinTrack - Expense Tracking & Reimbursement Management</title>
+    <meta name="title" content="FinTrack - Expense Tracking & Reimbursement Management" />
+    <meta name="description" content="Track expenses, manage reimbursements, and upload ICICI bank statements. Dark mode support, Google login, and PWA for offline access." />
+    <meta name="keywords" content="expense tracker, reimbursement management, ICICI bank, finance app, expense management, PWA, dark mode" />
+    <meta name="author" content="FinTrack" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://yourapp.com/" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://yourapp.com/" />
+    <meta property="og:title" content="FinTrack - Expense Tracking & Reimbursement Management" />
+    <meta property="og:description" content="Track expenses, manage reimbursements, and upload ICICI bank statements. Dark mode support, Google login, and PWA for offline access." />
+    <meta property="og:image" content="https://yourapp.com/icons/expense-tracker.jpg" />
+    <meta property="og:site_name" content="FinTrack" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://yourapp.com/" />
+    <meta property="twitter:title" content="FinTrack - Expense Tracking & Reimbursement Management" />
+    <meta property="twitter:description" content="Track expenses, manage reimbursements, and upload ICICI bank statements. Dark mode support, Google login, and PWA for offline access." />
+    <meta property="twitter:image" content="https://yourapp.com/icons/expense-tracker.jpg" />
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#111827" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="FinTrack" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "FinTrack",
+      "description": "Track expenses, manage reimbursements, and upload ICICI bank statements with dark mode support.",
+      "url": "https://yourapp.com/",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web, Android, iOS",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Expense tracking",
+        "Reimbursement management",
+        "ICICI bank statement upload",
+        "Dark mode",
+        "Google OAuth login",
+        "Progressive Web App (PWA)",
+        "Offline support"
+      ],
+      "screenshot": "https://yourapp.com/icons/expense-tracker.jpg",
+      "author": {
+        "@type": "Organization",
+        "name": "FinTrack"
+      }
+    }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
