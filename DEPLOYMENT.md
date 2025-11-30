@@ -1,78 +1,56 @@
 # Deployment Guide
 
-## Frontend Deployment (Firebase Hosting)
+## Frontend Deployment (Vercel)
 
 ### Prerequisites
-1. Install Firebase CLI:
+1. Create a Vercel account and install the Vercel CLI (optional):
    ```bash
-   npm install -g firebase-tools
-   ```
-
-2. Login to Firebase:
-   ```bash
-   firebase login
+   npm install -g vercel
    ```
 
 ### Setup
 
-1. **Create Firebase Project:**
-   - Go to [Firebase Console](https://console.firebase.google.com/)
-   - Create new project
-   - Enable Firebase Hosting
+1. **Create Vercel Project:**
+   - Go to [Vercel Dashboard](https://vercel.com/)
+   - New Project → Import from your GitHub repo
+   - Root Directory: `frontend`
+   - Framework Preset: `Vite`
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
 
-2. **Initialize Firebase in your project:**
-   ```bash
-   cd frontend
-   firebase init hosting
-   ```
-   - Select your Firebase project
-   - Public directory: `dist`
-   - Single-page app: `Yes`
-   - Automatic builds with GitHub: `No` (we'll use GitHub Actions)
+2. **(Optional) Add SPA rewrites:**
+    Vercel automatically serves Vite SPAs, but if needed you can add a `vercel.json` in `frontend/`:
+    ```json
+    {
+       "buildCommand": "npm run build",
+       "outputDirectory": "dist",
+       "rewrites": [
+          { "source": "/*", "destination": "/index.html" }
+       ]
+    }
+    ```
 
-3. **Update `.firebaserc`:**
-   ```json
-   {
-     "projects": {
-       "default": "your-actual-firebase-project-id"
-     }
-   }
-   ```
+3. **Configure environment variables (Vercel):**
+    In Vercel Project → Settings → Environment Variables, add:
+    - `VITE_API_URL`: `https://your-app.onrender.com/api`
+    - `VITE_GOOGLE_CLIENT_ID`: `your-google-client-id.apps.googleusercontent.com`
 
-4. **Configure environment variables:**
-   Create `frontend/.env.production`:
-   ```env
-   VITE_API_URL=https://your-app.onrender.com/api
-   VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
-   ```
-
-5. **Build and deploy manually:**
+4. **Local build (optional):**
    ```bash
    cd frontend
    npm run build
-   firebase deploy --only hosting
    ```
 
-### Automated Deployment (GitHub Actions)
+5. **Deploy:**
+   - Push to `main` branch; Vercel will auto-build and deploy
+   - Or run locally with CLI:
+     ```bash
+     vercel --prod
+     ```
 
-1. **Get Firebase Service Account:**
-   ```bash
-   firebase login:ci
-   ```
-   Copy the token generated
+### Automated Deployment
 
-2. **Add GitHub Secrets:**
-   Go to GitHub repo → Settings → Secrets and variables → Actions
-   
-   Add these secrets:
-   - `FIREBASE_SERVICE_ACCOUNT`: Paste the service account JSON
-   - `FIREBASE_PROJECT_ID`: Your Firebase project ID
-   - `VITE_API_URL`: `https://your-app.onrender.com/api`
-   - `VITE_GOOGLE_CLIENT_ID`: Your Google OAuth client ID
-
-3. **Deploy automatically:**
-   - Push to `main` branch
-   - GitHub Actions will build and deploy automatically
+Prefer Vercel’s GitHub integration over custom Actions. After importing the repo, each push to `main` builds and deploys automatically. Configure `Production` and `Preview` environment variables in Vercel settings.
 
 ---
 
@@ -96,7 +74,7 @@
 2. **Add Environment Variables in Render:**
    - `SECRET_KEY`: Generate a strong random string
    - `GOOGLE_CLIENT_ID`: Your Google OAuth client ID
-   - `CORS_ORIGINS`: Your Firebase Hosting URL (e.g., `https://your-app.web.app,https://your-app.firebaseapp.com`)
+   - `CORS_ORIGINS`: Your Vercel domain(s) (e.g., `https://your-app.vercel.app`)
    - `PYTHON_VERSION`: `3.9.18`
 
 3. **Deploy:**
@@ -124,20 +102,17 @@
 ### Update URLs
 
 1. **Frontend:**
-   Update `frontend/.env`:
-   ```env
-   VITE_API_URL=https://your-app.onrender.com/api
-   ```
+   Ensure `VITE_API_URL` is set in Vercel Project → Settings → Environment Variables.
 
 2. **Backend CORS:**
    Set environment variable in Render:
    ```
-   CORS_ORIGINS=https://your-app.web.app,https://your-app.firebaseapp.com
+   CORS_ORIGINS=https://your-app.vercel.app
    ```
 
 3. **SEO URLs:**
    Update in `frontend/index.html`, `sitemap.xml`, `robots.txt`:
-   - Replace `https://yourapp.com/` with `https://your-app.web.app/`
+   - Replace `https://yourapp.com/` with your Vercel production URL (e.g., `https://your-app.vercel.app/`)
 
 ### Google OAuth Setup
 
@@ -146,8 +121,7 @@
    → APIs & Services → Credentials → Your OAuth Client
 
    Add to Authorized JavaScript origins:
-   - `https://your-app.web.app`
-   - `https://your-app.firebaseapp.com`
+   - `https://your-app.vercel.app`
    - `https://your-app.onrender.com` (for backend if needed)
 
 2. **Update Client ID:**
