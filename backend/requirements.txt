@@ -11,3 +11,4 @@ passlib[bcrypt]
 bcrypt==3.2.2
 google-auth
 psycopg2-binary
+requests

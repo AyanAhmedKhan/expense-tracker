@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider, useAuth } from './AuthContext';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
@@ -10,11 +11,11 @@ import Signup from './pages/Signup';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { token, loading } = useAuth();
-    
+
     if (loading) {
         return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
     }
-    
+
     return token ? <>{children}</> : <Navigate to="/login" />;
 };
 
@@ -39,6 +40,7 @@ function App() {
                     } />
                 </Routes>
             </Router>
+            <Analytics />
         </AuthProvider>
     );
 }
