@@ -56,14 +56,30 @@ def on_startup():
 
 @app.get("/healthz")
 def healthz():
-    status = {"status": "ok", "db": "unknown"}
+    status = {
+        "status": "ok",
+        "db_status": "unknown",
+        "db_type": "unknown",
+        "db_url_masked": "unknown"
+    }
+    
+    # Determine DB type from URL
+    from database import SQLALCHEMY_DATABASE_URL
+    if "sqlite" in SQLALCHEMY_DATABASE_URL:
+        status["db_type"] = "sqlite"
+    elif "postgres" in SQLALCHEMY_DATABASE_URL:
+        status["db_type"] = "postgresql"
+    
+    # Mask URL for security
+    status["db_url_masked"] = SQLALCHEMY_DATABASE_URL.split("@")[-1] if "@" in SQLALCHEMY_DATABASE_URL else "local_file"
+
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        status["db"] = "ok"
+        status["db_status"] = "connected"
     except Exception as e:
         status["status"] = "error"
-        status["db"] = f"error: {e}"
+        status["db_status"] = f"error: {str(e)}"
         logger.error(f"Healthz DB check failed: {e}")
     return status
 

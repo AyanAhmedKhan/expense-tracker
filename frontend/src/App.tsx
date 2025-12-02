@@ -11,6 +11,7 @@ import Signup from './pages/Signup';
 import LandingPage from './pages/LandingPage';
 import About from './pages/About';
 import HeroDemo from './pages/HeroDemo';
+import Unauthorized from './pages/Unauthorized';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { token, loading } = useAuth();
@@ -33,6 +34,7 @@ function App() {
                     <Route path="/hero-demo" element={<HeroDemo />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
+                    <Route path="/unauthorized" element={<Unauthorized />} />
                     <Route path="/*" element={
                         <ProtectedRoute>
                             <Layout>

@@ -56,46 +56,42 @@ Prefer Vercel’s GitHub integration over custom Actions. After importing the re
 
 ## Backend Deployment (Render)
 
-### Prerequisites
-1. Create account on [Render](https://render.com/)
-2. Connect your GitHub repository
+> [!IMPORTANT]
+> **Do not use SQLite on Render.** Render's free tier has an "ephemeral filesystem," meaning **all your data will be deleted** every time the server restarts (approx. every 15 minutes of inactivity). You **MUST** use PostgreSQL for persistent data.
 
-### Setup
+### Recommended Method: Blueprints (Auto-Setup)
 
-1. **Create Web Service on Render:**
-   - Go to Render Dashboard → New → Web Service
-   - Connect your GitHub repo
-   - Select branch: `main`
-   - Root Directory: `backend`
-   - Environment: `Python 3`
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+The easiest way to deploy with a database is using the included `render.yaml` Blueprint.
 
-2. **Add Environment Variables in Render:**
-   - `SECRET_KEY`: Generate a strong random string
-   - `GOOGLE_CLIENT_ID`: Your Google OAuth client ID
-   - `CORS_ORIGINS`: Your Vercel domain(s) (e.g., `https://your-app.vercel.app`)
-   - `PYTHON_VERSION`: `3.9.18`
+1.  **Create Blueprint:**
+    - Go to [Render Dashboard](https://dashboard.render.com/)
+    - Click **New +** -> **Blueprint**
+    - Connect your GitHub repository.
+    - Give it a name (e.g., `fintrack`).
+    - Click **Apply**.
 
-3. **Deploy:**
-   - Render will auto-deploy on push to main
-   - Or click "Manual Deploy" in Render dashboard
+2.  **What happens next:**
+    - Render reads `render.yaml`.
+    - It automatically creates a **PostgreSQL Database** (`fintrack-db`).
+    - It automatically creates the **Web Service** (`fintrack-backend`).
+    - It automatically links them together using the `DATABASE_URL` environment variable.
 
-### Using render.yaml (Alternative)
+3.  **Finalize Configuration:**
+    - Go to your new **Web Service** in the dashboard.
+    - Click **Environment**.
+    - Add/Update these variables:
+        - `CORS_ORIGINS`: `https://your-frontend-url.vercel.app` (Remove any trailing slashes!)
+        - `GOOGLE_CLIENT_ID`: Your Google OAuth Client ID.
 
-1. **Add `render.yaml` to root:**
-   Already created at `d:\fintech\render.yaml`
+### Alternative: Manual Setup (Not Recommended)
 
-2. **Create Blueprint:**
-   - Render Dashboard → New → Blueprint
-   - Connect repo
-   - Render will read `render.yaml` and create all services
+If you manually created a Web Service, you must manually add a database:
 
-3. **Configure Environment Variables:**
-   - Add secrets in Render dashboard
-   - Update `CORS_ORIGINS` with your Firebase URL
-
----
+1.  Create a **PostgreSQL** database on Render.
+2.  Copy its `Internal Connection URL`.
+3.  Go to your Web Service -> Environment.
+4.  Add a variable `DATABASE_URL` and paste the connection URL.
+    - *Note: Render provides `postgres://` but our code automatically fixes it to `postgresql://`.*
 
 ## Post-Deployment Setup
 
@@ -127,30 +123,13 @@ Prefer Vercel’s GitHub integration over custom Actions. After importing the re
 2. **Update Client ID:**
    Ensure both frontend and backend have the same `GOOGLE_CLIENT_ID`
 
-### Database Migration (SQLite → PostgreSQL)
+### Database Setup
 
-For production, migrate from SQLite to PostgreSQL:
+The application is designed to switch automatically:
+- **Local Development**: Uses `sqlite:///./sql_app.db` (created automatically).
+- **Production (Render)**: Uses `DATABASE_URL` provided by Render (PostgreSQL).
 
-1. **Update backend dependencies:**
-   Add to `backend/requirements.txt`:
-   ```
-   psycopg2-binary
-   ```
-
-2. **Update `backend/database.py`:**
-   ```python
-   import os
-   
-   DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./sql_app.db")
-   
-   # Render provides postgres:// but SQLAlchemy needs postgresql://
-   if DATABASE_URL.startswith("postgres://"):
-       DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-   
-   engine = create_engine(DATABASE_URL)
-   ```
-
-3. **Render will auto-create PostgreSQL database** if using `render.yaml`
+No manual code changes are needed. The `backend/database.py` file already handles the connection string format (`postgres://` -> `postgresql://`).
 
 ---
 
