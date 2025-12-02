@@ -1,11 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Shield, PieChart, Zap, CheckCircle, Smartphone, Upload } from 'lucide-react';
+import { ArrowRight, Shield, PieChart, Zap, CheckCircle, Smartphone, Upload, Download } from 'lucide-react';
 import Logo from '../components/Logo';
 
 const LandingPage: React.FC = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+    useEffect(() => {
+        const handler = (e: any) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        return () => window.removeEventListener('beforeinstallprompt', handler);
+    }, []);
+
+    const handleInstallClick = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            setDeferredPrompt(null);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-900 text-white overflow-hidden font-sans">
@@ -29,6 +48,17 @@ const LandingPage: React.FC = () => {
                     <Link to="/about" className="text-gray-300 hover:text-white transition-colors">About</Link>
                     <a href="#features" className="text-gray-300 hover:text-white transition-colors">Features</a>
                     <a href="#how-it-works" className="text-gray-300 hover:text-white transition-colors">How it Works</a>
+
+                    {deferredPrompt && (
+                        <button
+                            onClick={handleInstallClick}
+                            className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors font-medium"
+                        >
+                            <Download className="w-4 h-4" />
+                            Install App
+                        </button>
+                    )}
+
                     <Link to="/login" className="text-gray-300 hover:text-white transition-colors">Login</Link>
                     <Link to="/signup" className="bg-indigo-600 hover:bg-indigo-700 px-6 py-2 rounded-full transition-all transform hover:scale-105 shadow-lg shadow-indigo-500/30">
                         Get Started
@@ -64,6 +94,20 @@ const LandingPage: React.FC = () => {
                         <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="text-xl text-gray-300 hover:text-white transition-colors">About</Link>
                         <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className="text-xl text-gray-300 hover:text-white transition-colors">Features</a>
                         <a href="#how-it-works" onClick={() => setIsMobileMenuOpen(false)} className="text-xl text-gray-300 hover:text-white transition-colors">How it Works</a>
+
+                        {deferredPrompt && (
+                            <button
+                                onClick={() => {
+                                    handleInstallClick();
+                                    setIsMobileMenuOpen(false);
+                                }}
+                                className="text-xl text-indigo-400 hover:text-indigo-300 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <Download className="w-5 h-5" />
+                                Install App
+                            </button>
+                        )}
+
                         <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-xl text-gray-300 hover:text-white transition-colors">Login</Link>
                         <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)} className="bg-indigo-600 hover:bg-indigo-700 px-8 py-3 rounded-full text-xl font-bold transition-all shadow-lg shadow-indigo-500/30 mx-auto inline-block">
                             Get Started
