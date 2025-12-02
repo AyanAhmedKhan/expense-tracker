@@ -9,6 +9,7 @@ export interface Expense {
     status: 'PENDING' | 'PARTIAL' | 'REIMBURSED';
     reimbursed_amount: number;
     transaction_hash: string;
+    created_at?: string;
 }
 
 export interface Reimbursement {
