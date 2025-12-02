@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Shield, PieChart, Zap, CheckCircle, Smartphone, Upload } from 'lucide-react';
+import Logo from '../components/Logo';
 
 const LandingPage: React.FC = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -13,9 +14,14 @@ const LandingPage: React.FC = () => {
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400"
+                    className="flex items-center gap-3"
                 >
-                    ExpensesLog
+                    <div className="bg-indigo-500/10 p-2 rounded-xl border border-indigo-500/20 backdrop-blur-sm">
+                        <Logo size={32} />
+                    </div>
+                    <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
+                        ExpensesLog
+                    </span>
                 </motion.div>
 
                 {/* Desktop Nav */}
@@ -276,9 +282,14 @@ const LandingPage: React.FC = () => {
             <footer className="bg-gray-900 border-t border-gray-800 py-12">
                 <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
                     <div className="mb-6 md:mb-0">
-                        <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
-                            ExpensesLog
-                        </span>
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="bg-indigo-500/10 p-2 rounded-xl border border-indigo-500/20">
+                                <Logo size={24} />
+                            </div>
+                            <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
+                                ExpensesLog
+                            </span>
+                        </div>
                         <p className="text-gray-500 mt-2">© {new Date().getFullYear()} ExpensesLog. All rights reserved.</p>
                         <p className="text-gray-600 text-sm mt-1">Developed by <a href="https://linkedin.com/in/ayan-ahmed-khan" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 transition-colors">Ayan Ahmed Khan</a></p>
                     </div>

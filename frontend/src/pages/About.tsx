@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Github, Linkedin, Mail, Code, Server, Database } from 'lucide-react';
 
+import Logo from '../components/Logo';
+
 const About: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-900 text-white font-sans">
@@ -12,8 +14,13 @@ const About: React.FC = () => {
                     <ArrowLeft className="w-5 h-5 mr-2" />
                     Back to Home
                 </Link>
-                <div className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
-                    ExpensesLog
+                <div className="flex items-center gap-3">
+                    <div className="bg-indigo-500/10 p-2 rounded-xl border border-indigo-500/20">
+                        <Logo size={24} />
+                    </div>
+                    <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
+                        ExpensesLog
+                    </span>
                 </div>
             </nav>
 

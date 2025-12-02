@@ -4,6 +4,7 @@ import client from '../api/client';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Mail, Lock } from 'lucide-react';
+import Logo from '../components/Logo';
 
 interface LoginFormData {
     email: string;
@@ -116,6 +117,9 @@ const Login: React.FC = () => {
                     className="max-w-md w-full space-y-8"
                 >
                     <div className="text-center lg:text-left">
+                        <div className="flex justify-center lg:justify-start mb-6">
+                            <Logo size={48} />
+                        </div>
                         <h2 className="text-3xl font-bold text-white">Sign in to ExpensesLog</h2>
                         <p className="mt-2 text-gray-400">
                             Don't have an account?{' '}

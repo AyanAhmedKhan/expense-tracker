@@ -4,29 +4,20 @@ type IconProps = React.HTMLAttributes<SVGElement>
 
 export const Icons = {
     logo: (props: IconProps) => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" {...props}>
-            <rect width="256" height="256" fill="none" />
-            <line
-                x1="208"
-                y1="128"
-                x2="128"
-                y2="208"
-                fill="none"
+        <svg viewBox="0 0 32 32" fill="none" {...props}>
+            <path
+                d="M16 2 L28 8 V20 C28 26.6274 22.6274 32 16 32 C9.37258 32 4 26.6274 4 20 V8 L16 2Z"
                 stroke="currentColor"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth="32"
             />
-            <line
-                x1="192"
-                y1="40"
-                x2="40"
-                y2="192"
-                fill="none"
+            <path
+                d="M10 18 L15 23 L24 11"
                 stroke="currentColor"
+                strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth="32"
             />
         </svg>
     ),

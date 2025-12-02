@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Upload, Receipt, History, Moon, Sun, LogOut } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../AuthContext';
+import Logo from './Logo';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const location = useLocation();
@@ -51,14 +52,24 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col md:flex-row">
-            {/* Mobile Dark Mode Toggle - Floating Button */}
-            <button
-                onClick={toggleDarkMode}
-                className="md:hidden fixed top-4 right-4 z-50 p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
-                aria-label="Toggle dark mode"
-            >
-                {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
+            {/* Mobile Top Bar */}
+            <div className="md:hidden fixed top-0 w-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-50 px-4 py-3 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-1.5 rounded-lg">
+                        <Logo size={24} />
+                    </div>
+                    <span className="text-lg font-bold text-gray-900 dark:text-white">
+                        Expenses<span className="text-blue-600 dark:text-blue-400">Log</span>
+                    </span>
+                </div>
+                <button
+                    onClick={toggleDarkMode}
+                    className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
+                    aria-label="Toggle dark mode"
+                >
+                    {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+                </button>
+            </div>
 
             {/* Mobile Bottom Nav */}
             <nav className="md:hidden fixed bottom-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around py-3 z-50">
@@ -80,7 +91,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             {/* Desktop Sidebar */}
             <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0">
                 <div className="p-6 flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">ExpensesLog</h1>
+                    <div className="flex items-center gap-3">
+                        <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-xl">
+                            <Logo size={28} />
+                        </div>
+                        <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+                            Expenses<span className="text-blue-600 dark:text-blue-400">Log</span>
+                        </h1>
+                    </div>
                     <button
                         onClick={toggleDarkMode}
                         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
