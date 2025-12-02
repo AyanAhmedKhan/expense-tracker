@@ -17,7 +17,9 @@ const ExpenseList: React.FC = () => {
     const [toDate, setToDate] = useState<string>('');
     const [sortBy, setSortBy] = useState<'date' | 'amount' | 'created_at' | 'description'>('date');
     const [order, setOrder] = useState<'asc' | 'desc'>('desc');
+
     const [reimbursing, setReimbursing] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
 
     const fetchExpenses = () => {
         setLoading(true);
@@ -102,14 +104,22 @@ const ExpenseList: React.FC = () => {
 
             {/* Filters */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                    </svg>
-                    Filter & Search
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        Filter & Search
+                    </h3>
+                    <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="md:hidden text-blue-600 dark:text-blue-400 text-sm font-medium"
+                    >
+                        {showFilters ? 'Hide' : 'Show'}
+                    </button>
+                </div>
+
+                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ${showFilters ? 'block' : 'hidden md:grid'}`}>
                     {/* Search */}
                     <div className="lg:col-span-2">
                         <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Search</label>
@@ -125,9 +135,9 @@ const ExpenseList: React.FC = () => {
                     {/* Status */}
                     <div>
                         <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Status</label>
-                        <select 
-                            value={status} 
-                            onChange={(e) => setStatus(e.target.value as any)} 
+                        <select
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value as any)}
                             className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
                         >
                             <option value="">All Status</option>
@@ -153,20 +163,20 @@ const ExpenseList: React.FC = () => {
                     <div className="lg:col-span-2">
                         <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Amount Range</label>
                         <div className="flex gap-2">
-                            <input 
-                                type="number" 
-                                placeholder="Min ₹" 
-                                value={minAmount} 
-                                onChange={(e) => setMinAmount(e.target.value)} 
-                                className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors" 
+                            <input
+                                type="number"
+                                placeholder="Min ₹"
+                                value={minAmount}
+                                onChange={(e) => setMinAmount(e.target.value)}
+                                className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
                             />
                             <span className="flex items-center text-gray-400 dark:text-gray-500">—</span>
-                            <input 
-                                type="number" 
-                                placeholder="Max ₹" 
-                                value={maxAmount} 
-                                onChange={(e) => setMaxAmount(e.target.value)} 
-                                className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors" 
+                            <input
+                                type="number"
+                                placeholder="Max ₹"
+                                value={maxAmount}
+                                onChange={(e) => setMaxAmount(e.target.value)}
+                                className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
                             />
                         </div>
                     </div>
@@ -175,18 +185,18 @@ const ExpenseList: React.FC = () => {
                     <div className="lg:col-span-2">
                         <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Date Range</label>
                         <div className="flex gap-2">
-                            <input 
-                                type="date" 
-                                value={fromDate} 
-                                onChange={(e) => setFromDate(e.target.value)} 
-                                className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors" 
+                            <input
+                                type="date"
+                                value={fromDate}
+                                onChange={(e) => setFromDate(e.target.value)}
+                                className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
                             />
                             <span className="flex items-center text-gray-400 dark:text-gray-500">to</span>
-                            <input 
-                                type="date" 
-                                value={toDate} 
-                                onChange={(e) => setToDate(e.target.value)} 
-                                className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors" 
+                            <input
+                                type="date"
+                                value={toDate}
+                                onChange={(e) => setToDate(e.target.value)}
+                                className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
                             />
                         </div>
                     </div>
@@ -194,9 +204,9 @@ const ExpenseList: React.FC = () => {
                     {/* Sort By */}
                     <div>
                         <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Sort By</label>
-                        <select 
-                            value={sortBy} 
-                            onChange={(e) => setSortBy(e.target.value as any)} 
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as any)}
                             className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
                         >
                             <option value="date">Date</option>
@@ -209,9 +219,9 @@ const ExpenseList: React.FC = () => {
                     {/* Order */}
                     <div>
                         <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Order</label>
-                        <select 
-                            value={order} 
-                            onChange={(e) => setOrder(e.target.value as any)} 
+                        <select
+                            value={order}
+                            onChange={(e) => setOrder(e.target.value as any)}
                             className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
                         >
                             <option value="desc">Descending</option>
@@ -221,9 +231,9 @@ const ExpenseList: React.FC = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3 mt-5 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <button 
-                        onClick={fetchExpenses} 
+                <div className={`flex gap-3 mt-5 pt-4 border-t border-gray-200 dark:border-gray-700 ${showFilters ? 'flex' : 'hidden md:flex'}`}>
+                    <button
+                        onClick={fetchExpenses}
                         className="flex-1 md:flex-initial bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium text-sm transition-colors shadow-sm hover:shadow flex items-center justify-center gap-2"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -231,19 +241,19 @@ const ExpenseList: React.FC = () => {
                         </svg>
                         Apply Filters
                     </button>
-                    <button 
-                        onClick={() => { 
-                            setQ(''); 
-                            setStatus(''); 
-                            setSource(''); 
-                            setMinAmount(''); 
-                            setMaxAmount(''); 
-                            setFromDate(''); 
-                            setToDate(''); 
-                            setSortBy('date'); 
-                            setOrder('desc'); 
-                            fetchExpenses(); 
-                        }} 
+                    <button
+                        onClick={() => {
+                            setQ('');
+                            setStatus('');
+                            setSource('');
+                            setMinAmount('');
+                            setMaxAmount('');
+                            setFromDate('');
+                            setToDate('');
+                            setSortBy('date');
+                            setOrder('desc');
+                            fetchExpenses();
+                        }}
                         className="flex-1 md:flex-initial px-6 py-2.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-sm transition-colors flex items-center justify-center gap-2"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -315,7 +325,7 @@ const ExpenseList: React.FC = () => {
                     <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-700">
                         {expenses.map((expense) => (
                             <div key={expense.id} className="p-4 flex items-start space-x-3">
-                                <div className="pt-1">
+                                <div className="pt-1 shrink-0">
                                     {expense.status !== 'REIMBURSED' && (
                                         <input
                                             type="checkbox"

@@ -43,7 +43,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     };
 
     const navItems = [
-        { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/upload', label: 'Upload', icon: Upload },
         { path: '/expenses', label: 'Expenses', icon: Receipt },
         { path: '/reimbursements', label: 'Reimbursements', icon: History },
