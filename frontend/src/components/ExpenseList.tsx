@@ -103,7 +103,7 @@ const ExpenseList: React.FC = () => {
             </div>
 
             {/* Filters */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 md:p-6">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,13 +113,13 @@ const ExpenseList: React.FC = () => {
                     </h3>
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className="md:hidden text-blue-600 dark:text-blue-400 text-sm font-medium"
+                        className="lg:hidden text-blue-600 dark:text-blue-400 text-sm font-medium px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
                     >
-                        {showFilters ? 'Hide' : 'Show'}
+                        {showFilters ? 'Hide Filters' : 'Show Filters'}
                     </button>
                 </div>
 
-                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ${showFilters ? 'block' : 'hidden md:grid'}`}>
+                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ${showFilters ? 'block' : 'hidden lg:grid'}`}>
                     {/* Search */}
                     <div className="lg:col-span-2">
                         <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Search</label>
@@ -231,7 +231,7 @@ const ExpenseList: React.FC = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className={`flex gap-3 mt-5 pt-4 border-t border-gray-200 dark:border-gray-700 ${showFilters ? 'flex' : 'hidden md:flex'}`}>
+                <div className={`flex flex-col sm:flex-row gap-3 mt-5 pt-4 border-t border-gray-200 dark:border-gray-700 ${showFilters ? 'flex' : 'hidden lg:flex'}`}>
                     <button
                         onClick={fetchExpenses}
                         className="flex-1 md:flex-initial bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium text-sm transition-colors shadow-sm hover:shadow flex items-center justify-center gap-2"
@@ -264,104 +264,123 @@ const ExpenseList: React.FC = () => {
                 </div>
             </div>
 
-            {loading ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">Loading expenses...</div>
-            ) : (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                    {/* Desktop Table */}
-                    <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-                                <tr>
-                                    <th className="p-4 w-10"></th>
-                                    <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Date</th>
-                                    <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Description</th>
-                                    <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Amount</th>
-                                    <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Type</th>
-                                    <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                                {expenses.map((expense) => (
-                                    <tr key={expense.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                        <td className="p-4">
-                                            {expense.status !== 'REIMBURSED' && (
+            {
+                loading ? (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">Loading expenses...</div>
+                ) : (
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                        {/* Desktop Table - Hidden on Mobile/Tablet, visible on Large screens */}
+                        <div className="hidden lg:block overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                                    <tr>
+                                        <th className="p-4 w-10"></th>
+                                        <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Date</th>
+                                        <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Description</th>
+                                        <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Amount</th>
+                                        <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Type</th>
+                                        <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                                    {expenses.map((expense) => (
+                                        <tr key={expense.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                            <td className="p-4">
+                                                {expense.status !== 'REIMBURSED' && (
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedIds.includes(expense.id)}
+                                                        onChange={() => toggleSelection(expense.id)}
+                                                        disabled={expense.amount < 0}
+                                                        title={expense.amount < 0 ? 'Credits cannot be reimbursed' : 'Select expense'}
+                                                        className="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-blue-500 disabled:opacity-40"
+                                                    />
+                                                )}
+                                            </td>
+                                            <td className="p-4 text-sm text-gray-600 dark:text-gray-300">
+                                                {format(new Date(expense.date), 'dd MMM yyyy')}
+                                            </td>
+                                            <td className="p-4 text-sm text-gray-900 dark:text-white font-medium">
+                                                {expense.description}
+                                            </td>
+                                            <td className={"p-4 text-sm font-semibold " + getAmountClass(expense.amount)}>
+                                                ₹{Math.abs(expense.amount).toLocaleString('en-IN')}
+                                            </td>
+                                            <td className="p-4">
+                                                <span className={clsx('px-2 py-1 rounded-full text-xs font-medium', getFlowLabel(expense.amount) === 'Credit' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')}>
+                                                    {getFlowLabel(expense.amount)}
+                                                </span>
+                                            </td>
+                                            <td className="p-4">
+                                                <span className={clsx('px-2 py-1 rounded-full text-xs font-medium', getStatusColor(expense.status))}>
+                                                    {expense.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile/Tablet Cards - Visible on Mobile/Tablet, hidden on Large screens */}
+                        <div className="lg:hidden space-y-4 p-4 bg-gray-50 dark:bg-gray-900/50">
+                            {expenses.map((expense) => (
+                                <div key={expense.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col gap-3">
+                                    <div className="flex justify-between items-start gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className={clsx('px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider', getFlowLabel(expense.amount) === 'Credit' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')}>
+                                                    {getFlowLabel(expense.amount)}
+                                                </span>
+                                                <span className="text-xs text-gray-400 dark:text-gray-500">•</span>
+                                                <span className="text-xs text-gray-500 dark:text-gray-400">{format(new Date(expense.date), 'dd MMM yyyy')}</span>
+                                            </div>
+                                            <p className="font-semibold text-gray-900 dark:text-white text-base leading-tight break-words">
+                                                {expense.description}
+                                            </p>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            <p className={"text-lg font-bold " + getAmountClass(expense.amount)}>
+                                                ₹{Math.abs(expense.amount).toLocaleString('en-IN')}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+                                        <div className="flex items-center gap-2">
+                                            <span className={clsx('px-2.5 py-1 rounded-md text-xs font-medium border',
+                                                expense.status === 'REIMBURSED' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                    expense.status === 'PARTIAL' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                                        'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'
+                                            )}>
+                                                {expense.status}
+                                            </span>
+                                        </div>
+
+                                        {expense.status !== 'REIMBURSED' && (
+                                            <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedIds.includes(expense.id)}
                                                     onChange={() => toggleSelection(expense.id)}
                                                     disabled={expense.amount < 0}
-                                                    title={expense.amount < 0 ? 'Credits cannot be reimbursed' : 'Select expense'}
-                                                    className="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-blue-500 disabled:opacity-40"
+                                                    className="w-5 h-5 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-blue-500 disabled:opacity-40"
                                                 />
-                                            )}
-                                        </td>
-                                        <td className="p-4 text-sm text-gray-600 dark:text-gray-300">
-                                            {format(new Date(expense.date), 'dd MMM yyyy')}
-                                        </td>
-                                        <td className="p-4 text-sm text-gray-900 dark:text-white font-medium">
-                                            {expense.description}
-                                        </td>
-                                        <td className={"p-4 text-sm font-semibold " + getAmountClass(expense.amount)}>
-                                            ₹{Math.abs(expense.amount).toLocaleString('en-IN')}
-                                        </td>
-                                        <td className="p-4">
-                                            <span className={clsx('px-2 py-1 rounded-full text-xs font-medium', getFlowLabel(expense.amount) === 'Credit' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')}>
-                                                {getFlowLabel(expense.amount)}
-                                            </span>
-                                        </td>
-                                        <td className="p-4">
-                                            <span className={clsx('px-2 py-1 rounded-full text-xs font-medium', getStatusColor(expense.status))}>
-                                                {expense.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Mobile Cards */}
-                    <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-700">
-                        {expenses.map((expense) => (
-                            <div key={expense.id} className="p-4 flex items-start space-x-3">
-                                <div className="pt-1 shrink-0">
-                                    {expense.status !== 'REIMBURSED' && (
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedIds.includes(expense.id)}
-                                            onChange={() => toggleSelection(expense.id)}
-                                            className="w-5 h-5 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-blue-500"
-                                        />
-                                    )}
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <p className="font-medium text-gray-900 dark:text-white line-clamp-2">{expense.description}</p>
-                                        <p className={"font-bold " + getAmountClass(expense.amount)}>₹{Math.abs(expense.amount).toLocaleString('en-IN')}</p>
-                                    </div>
-                                    <div className="mt-1">
-                                        <span className={clsx('px-2 py-0.5 rounded-full text-xs font-medium', getFlowLabel(expense.amount) === 'Credit' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')}>
-                                            {getFlowLabel(expense.amount)}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-                                        <span>{format(new Date(expense.date), 'dd MMM yyyy')}</span>
-                                        <span className={clsx('px-2 py-0.5 rounded-full text-xs font-medium', getStatusColor(expense.status))}>
-                                            {expense.status}
-                                        </span>
+                                                <span>Select</span>
+                                            </label>
+                                        )}
                                     </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
 
-                    {expenses.length === 0 && (
-                        <div className="p-8 text-center text-gray-500 dark:text-gray-400">No expenses found. Upload a statement to get started.</div>
-                    )}
-                </div>
-            )}
-        </div>
+                        {expenses.length === 0 && (
+                            <div className="p-8 text-center text-gray-500 dark:text-gray-400">No expenses found. Upload a statement to get started.</div>
+                        )}
+                    </div>
+                )
+            }
+        </div >
     );
 };
 
