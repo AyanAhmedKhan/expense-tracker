@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Shield, PieChart, Zap, CheckCircle, Smartphone, Upload } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     return (
         <div className="min-h-screen bg-gray-900 text-white overflow-hidden font-sans">
             {/* Navigation */}
-            <nav className="container mx-auto px-6 py-6 flex justify-between items-center relative z-20">
+            <nav className="container mx-auto px-6 py-6 flex justify-between items-center relative z-50">
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -15,6 +17,8 @@ const LandingPage: React.FC = () => {
                 >
                     ExpensesLog
                 </motion.div>
+
+                {/* Desktop Nav */}
                 <div className="space-x-6 hidden md:flex items-center">
                     <Link to="/about" className="text-gray-300 hover:text-white transition-colors">About</Link>
                     <a href="#features" className="text-gray-300 hover:text-white transition-colors">Features</a>
@@ -24,7 +28,43 @@ const LandingPage: React.FC = () => {
                         Get Started
                     </Link>
                 </div>
+
+                {/* Mobile Menu Button */}
+                <button
+                    className="md:hidden text-gray-300 hover:text-white focus:outline-none"
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                >
+                    {isMobileMenuOpen ? (
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    ) : (
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    )}
+                </button>
             </nav>
+
+            {/* Mobile Menu Overlay */}
+            {isMobileMenuOpen && (
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="fixed inset-0 z-40 bg-gray-900/95 backdrop-blur-lg pt-24 px-6 md:hidden"
+                >
+                    <div className="flex flex-col space-y-6 text-center">
+                        <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="text-xl text-gray-300 hover:text-white transition-colors">About</Link>
+                        <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className="text-xl text-gray-300 hover:text-white transition-colors">Features</a>
+                        <a href="#how-it-works" onClick={() => setIsMobileMenuOpen(false)} className="text-xl text-gray-300 hover:text-white transition-colors">How it Works</a>
+                        <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-xl text-gray-300 hover:text-white transition-colors">Login</Link>
+                        <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)} className="bg-indigo-600 hover:bg-indigo-700 px-8 py-3 rounded-full text-xl font-bold transition-all shadow-lg shadow-indigo-500/30 mx-auto inline-block">
+                            Get Started
+                        </Link>
+                    </div>
+                </motion.div>
+            )}
 
             {/* Hero Section */}
             <header className="container mx-auto px-6 py-20 md:py-32 flex flex-col md:flex-row items-center relative">
