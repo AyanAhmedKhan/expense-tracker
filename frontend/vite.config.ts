@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icons/favicon.svg', 'icons/favicon.ico', 'icons/apple-touch-icon.png', 'icons/favicon-16x16.png', 'icons/favicon-32x32.png', 'robots.txt', 'sitemap.xml'],
+        includeAssets: ['favicon/favicon.ico', 'favicon/apple-touch-icon.png', 'favicon/favicon-16x16.png', 'favicon/favicon-32x32.png', 'robots.txt', 'sitemap.xml'],
         manifest: {
           name: 'ExpensesLog - Expense & Reimbursement Tracker',
           short_name: 'ExpensesLog',
@@ -22,9 +22,9 @@ export default defineConfig(({ mode }) => {
           start_url: '/',
           scope: '/',
           icons: [
-            { src: 'icons/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
-            { src: 'icons/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
-            { src: 'icons/android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+            { src: 'favicon/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+            { src: 'favicon/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
+            { src: 'favicon/android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
           ]
         },
         workbox: {
