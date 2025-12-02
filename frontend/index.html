@@ -1,58 +1,69 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <!-- Primary Meta Tags -->
-    <title>FinTrack - Expense Tracking & Reimbursement Management</title>
-    <meta name="title" content="FinTrack - Expense Tracking & Reimbursement Management" />
-    <meta name="description" content="Track expenses, manage reimbursements, and upload ICICI bank statements. Dark mode support, Google login, and PWA for offline access." />
-    <meta name="keywords" content="expense tracker, reimbursement management, ICICI bank, finance app, expense management, PWA, dark mode" />
-    <meta name="author" content="FinTrack" />
-    <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://yourapp.com/" />
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://yourapp.com/" />
-    <meta property="og:title" content="FinTrack - Expense Tracking & Reimbursement Management" />
-    <meta property="og:description" content="Track expenses, manage reimbursements, and upload ICICI bank statements. Dark mode support, Google login, and PWA for offline access." />
-    <meta property="og:image" content="https://yourapp.com/icons/expense-tracker.jpg" />
-    <meta property="og:site_name" content="FinTrack" />
-    
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://yourapp.com/" />
-    <meta property="twitter:title" content="FinTrack - Expense Tracking & Reimbursement Management" />
-    <meta property="twitter:description" content="Track expenses, manage reimbursements, and upload ICICI bank statements. Dark mode support, Google login, and PWA for offline access." />
-    <meta property="twitter:image" content="https://yourapp.com/icons/expense-tracker.jpg" />
-    
-    <!-- Favicons -->
-    <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
-    
-    <!-- PWA -->
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#111827" />
-    <!-- Deprecated: apple-mobile-web-app-capable; use mobile-web-app-capable -->
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="FinTrack" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    
-    <!-- Google Sign-In -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
-    <!-- Structured Data (JSON-LD) -->
-    <script type="application/ld+json">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Primary Meta Tags -->
+  <title>ExpensesLog - Master Your Finances</title>
+  <meta name="title" content="ExpensesLog - Master Your Finances" />
+  <meta name="description"
+    content="Effortlessly track expenses, manage reimbursements, and gain insights into your spending habits with our AI-powered platform." />
+  <meta name="keywords"
+    content="expense tracker, reimbursement management, ICICI bank, finance app, expense management, PWA, dark mode, AI finance" />
+  <meta name="author" content="ExpensesLog" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://expenseslog.vercel.app/" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://expenseslog.vercel.app/" />
+  <meta property="og:title" content="ExpensesLog - Master Your Finances" />
+  <meta property="og:description"
+    content="Effortlessly track expenses, manage reimbursements, and gain insights into your spending habits with our AI-powered platform." />
+  <meta property="og:image" content="https://expenseslog.vercel.app/icons/expense-tracker.jpg" />
+  <meta property="og:site_name" content="ExpensesLog" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://expenseslog.vercel.app/" />
+  <meta property="twitter:title" content="ExpensesLog - Master Your Finances" />
+  <meta property="twitter:description"
+    content="Effortlessly track expenses, manage reimbursements, and gain insights into your spending habits with our AI-powered platform." />
+  <meta property="twitter:image" content="https://expenseslog.vercel.app/icons/expense-tracker.jpg" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ExpensesLog" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
+  <!-- Google Sign-In -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "FinTrack",
-      "description": "Track expenses, manage reimbursements, and upload ICICI bank statements with dark mode support.",
-      "url": "https://yourapp.com/",
+      "@type": "SoftwareApplication",
+      "name": "ExpensesLog",
+      "description": "Effortlessly track expenses, manage reimbursements, and gain insights into your spending habits with our AI-powered platform.",
+      "url": "https://expenseslog.vercel.app/",
       "applicationCategory": "FinanceApplication",
       "operatingSystem": "Web, Android, iOS",
       "offers": {
@@ -69,16 +80,18 @@
         "Progressive Web App (PWA)",
         "Offline support"
       ],
-      "screenshot": "https://yourapp.com/icons/expense-tracker.jpg",
+      "screenshot": "https://expenseslog.vercel.app/icons/expense-tracker.jpg",
       "author": {
         "@type": "Organization",
-        "name": "FinTrack"
+        "name": "ExpensesLog"
       }
     }
     </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

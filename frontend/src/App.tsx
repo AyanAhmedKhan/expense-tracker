@@ -8,6 +8,9 @@ import ExpenseList from './components/ExpenseList';
 import ReimbursementHistory from './components/ReimbursementHistory';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import LandingPage from './pages/LandingPage';
+import About from './pages/About';
+import HeroDemo from './pages/HeroDemo';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { token, loading } = useAuth();
@@ -23,14 +26,18 @@ function App() {
     return (
         <AuthProvider>
             <Router>
+                <Analytics />
                 <Routes>
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/hero-demo" element={<HeroDemo />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/*" element={
                         <ProtectedRoute>
                             <Layout>
                                 <Routes>
-                                    <Route path="/" element={<Dashboard />} />
+                                    <Route path="/dashboard" element={<Dashboard />} />
                                     <Route path="/upload" element={<Upload />} />
                                     <Route path="/expenses" element={<ExpenseList />} />
                                     <Route path="/reimbursements" element={<ReimbursementHistory />} />
@@ -40,7 +47,6 @@ function App() {
                     } />
                 </Routes>
             </Router>
-            <Analytics />
         </AuthProvider>
     );
 }

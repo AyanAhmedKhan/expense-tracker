@@ -27,13 +27,13 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         console.log('Current darkMode:', darkMode, '→ New mode:', newMode);
         setDarkMode(newMode);
         localStorage.setItem('darkMode', String(newMode));
-        
+
         if (newMode) {
             document.documentElement.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
         }
-        
+
         console.log('Dark mode toggled:', newMode, 'HTML classes:', document.documentElement.className);
     };
 
@@ -80,7 +80,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             {/* Desktop Sidebar */}
             <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0">
                 <div className="p-6 flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">FinTrack</h1>
+                    <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">ExpensesLog</h1>
                     <button
                         onClick={toggleDarkMode}
                         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
