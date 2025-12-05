@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
 import enum
@@ -19,9 +19,13 @@ class Expense(Base):
     source = Column(String)  # e.g., "ICICI Statement"
     status = Column(Enum(ExpenseStatus), default=ExpenseStatus.PENDING)
     reimbursed_amount = Column(Float, default=0.0)
-    transaction_hash = Column(String, unique=True, index=True)
+    transaction_hash = Column(String, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint('transaction_hash', 'user_id', name='uix_expense_hash_user'),
+    )
 
 class Reimbursement(Base):
     __tablename__ = "reimbursements"
