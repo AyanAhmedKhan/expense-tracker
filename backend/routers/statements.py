@@ -21,7 +21,7 @@ async def upload_statement(file: UploadFile = File(...), db: Session = Depends(g
             crud.create_statement_upload(db, schemas.StatementUploadBase(
                 file_name=file.filename,
                 num_transactions_imported=0
-            ))
+            ), user_id=current_user.id)
             return {"uploaded": 1, "existing": 0, "new_added": 0}
         
         new_added = 0
@@ -32,7 +32,7 @@ async def upload_statement(file: UploadFile = File(...), db: Session = Depends(g
                 txn_hash = parser.generate_transaction_hash(txn["date"], txn["description"], txn["amount"])
                 
                 # Check if exists
-                if crud.get_expense_by_hash(db, txn_hash):
+                if crud.get_expense_by_hash(db, txn_hash, user_id=current_user.id):
                     existing += 1
                     continue
                 
@@ -41,7 +41,7 @@ async def upload_statement(file: UploadFile = File(...), db: Session = Depends(g
                     **txn,
                     transaction_hash=txn_hash
                 )
-                crud.create_expense(db, expense_create)
+                crud.create_expense(db, expense_create, user_id=current_user.id)
                 new_added += 1
             except Exception as e:
                 print(f"Error processing transaction: {e}, Transaction: {txn}")
@@ -51,7 +51,7 @@ async def upload_statement(file: UploadFile = File(...), db: Session = Depends(g
         crud.create_statement_upload(db, schemas.StatementUploadBase(
             file_name=file.filename,
             num_transactions_imported=new_added
-        ))
+        ), user_id=current_user.id)
         
         return {
             "uploaded": 1,

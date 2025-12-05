@@ -2,11 +2,11 @@ from sqlalchemy.orm import Session
 import models, schemas
 from datetime import datetime
 
-def get_expense_by_hash(db: Session, transaction_hash: str):
-    return db.query(models.Expense).filter(models.Expense.transaction_hash == transaction_hash).first()
+def get_expense_by_hash(db: Session, transaction_hash: str, user_id: int):
+    return db.query(models.Expense).filter(models.Expense.transaction_hash == transaction_hash, models.Expense.user_id == user_id).first()
 
-def create_expense(db: Session, expense: schemas.ExpenseCreate):
-    db_expense = models.Expense(**expense.dict())
+def create_expense(db: Session, expense: schemas.ExpenseCreate, user_id: int):
+    db_expense = models.Expense(**expense.dict(), user_id=user_id)
     db.add(db_expense)
     db.commit()
     db.refresh(db_expense)
@@ -25,8 +25,9 @@ def get_expenses(
     to_date: datetime = None,
     sort_by: str = "date",
     order: str = "desc",
+    user_id: int = None
 ):
-    query = db.query(models.Expense)
+    query = db.query(models.Expense).filter(models.Expense.user_id == user_id)
     if q:
         query = query.filter(models.Expense.description.ilike(f"%{q}%"))
     if status:
@@ -53,9 +54,9 @@ def get_expenses(
         query = query.order_by(sort_col.desc())
     return query.offset(skip).limit(limit).all()
 
-def create_reimbursement(db: Session, reimbursement: schemas.ReimbursementCreate):
+def create_reimbursement(db: Session, reimbursement: schemas.ReimbursementCreate, user_id: int):
     # Calculate total amount from selected expenses
-    expenses = db.query(models.Expense).filter(models.Expense.id.in_(reimbursement.expense_ids)).all()
+    expenses = db.query(models.Expense).filter(models.Expense.id.in_(reimbursement.expense_ids), models.Expense.user_id == user_id).all()
     # Only reimburse debits (positive amount) with remaining balance
     applicable = [
         e for e in expenses
@@ -70,7 +71,8 @@ def create_reimbursement(db: Session, reimbursement: schemas.ReimbursementCreate
     db_reimbursement = models.Reimbursement(
         amount=total_amount,
         note=reimbursement.note,
-        date=datetime.utcnow()
+        date=datetime.utcnow(),
+        user_id=user_id
     )
     db.add(db_reimbursement)
     db.commit()
@@ -93,8 +95,8 @@ def create_reimbursement(db: Session, reimbursement: schemas.ReimbursementCreate
     db.commit()
     return db_reimbursement
 
-def get_reimbursements(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Reimbursement).offset(skip).limit(limit).all()
+def get_reimbursements(db: Session, skip: int = 0, limit: int = 100, user_id: int = None):
+    return db.query(models.Reimbursement).filter(models.Reimbursement.user_id == user_id).offset(skip).limit(limit).all()
 
 def get_reimbursement_items(db: Session, reimbursement_id: int):
     # Join coverage with expenses
@@ -116,8 +118,8 @@ def get_reimbursement_items(db: Session, reimbursement_id: int):
         }
     for e in expenses]
 
-def create_statement_upload(db: Session, upload: schemas.StatementUploadBase):
-    db_upload = models.StatementUpload(**upload.dict())
+def create_statement_upload(db: Session, upload: schemas.StatementUploadBase, user_id: int):
+    db_upload = models.StatementUpload(**upload.dict(), user_id=user_id)
     db.add(db_upload)
     db.commit()
     db.refresh(db_upload)

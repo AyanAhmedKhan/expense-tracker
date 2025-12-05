@@ -20,6 +20,7 @@ class Expense(Base):
     status = Column(Enum(ExpenseStatus), default=ExpenseStatus.PENDING)
     reimbursed_amount = Column(Float, default=0.0)
     transaction_hash = Column(String, unique=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class Reimbursement(Base):
@@ -29,6 +30,7 @@ class Reimbursement(Base):
     date = Column(DateTime, default=datetime.utcnow)
     amount = Column(Float)
     note = Column(String, nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class ReimbursementCoverage(Base):
@@ -45,6 +47,7 @@ class StatementUpload(Base):
     id = Column(Integer, primary_key=True, index=True)
     file_name = Column(String)
     uploaded_at = Column(DateTime, default=datetime.utcnow)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     num_transactions_imported = Column(Integer)
 
 class User(Base):

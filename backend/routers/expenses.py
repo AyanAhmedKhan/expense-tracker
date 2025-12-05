@@ -44,9 +44,10 @@ def read_expenses(
         to_date=to_date_dt,
         sort_by=sort_by,
         order=order,
+        user_id=current_user.id
     )
     return expenses
 
 @router.post("/", response_model=schemas.Expense)
 def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    return crud.create_expense(db, expense)
+    return crud.create_expense(db, expense, user_id=current_user.id)

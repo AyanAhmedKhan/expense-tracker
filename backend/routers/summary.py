@@ -12,11 +12,11 @@ router = APIRouter(
 
 @router.get("/")
 def get_summary(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    total_spent = db.query(func.sum(models.Expense.amount)).scalar() or 0.0
-    total_reimbursed = db.query(func.sum(models.Expense.reimbursed_amount)).scalar() or 0.0
+    total_spent = db.query(func.sum(models.Expense.amount)).filter(models.Expense.user_id == current_user.id).scalar() or 0.0
+    total_reimbursed = db.query(func.sum(models.Expense.reimbursed_amount)).filter(models.Expense.user_id == current_user.id).scalar() or 0.0
     total_pending = total_spent - total_reimbursed
     
-    last_reimbursement = db.query(models.Reimbursement).order_by(models.Reimbursement.date.desc()).first()
+    last_reimbursement = db.query(models.Reimbursement).filter(models.Reimbursement.user_id == current_user.id).order_by(models.Reimbursement.date.desc()).first()
     
     return {
         "total_spent": total_spent,
