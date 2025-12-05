@@ -18,6 +18,10 @@ services:
           property: connectionString
       - key: PYTHON_VERSION
         value: 3.9.18
+      - key: CORS_ORIGINS
+        value: https://expenseslog.vercel.app
+      - key: CORS_ORIGINS
+        value: https://expenseslog.vercel.app
 
 databases:
   - name: fintrack-db
