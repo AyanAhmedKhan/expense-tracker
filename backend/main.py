@@ -44,16 +44,6 @@ app.include_router(summary.router)
 def read_root():
     return {"message": "Welcome to ICICI Tracker API"}
 
-@app.get("/reset-db-hard-reset-789")
-def reset_db_endpoint():
-    try:
-        logging.warning("RESET DB ENDPOINT CALLED. Dropping all tables...")
-        Base.metadata.drop_all(bind=engine)
-        logging.info("Tables dropped. Recreating...")
-        Base.metadata.create_all(bind=engine)
-        return {"status": "success", "message": "Database reset successfully. Tables dropped and recreated."}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
 
 @app.on_event("startup")
 def on_startup():
