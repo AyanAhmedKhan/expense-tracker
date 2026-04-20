@@ -12,6 +12,7 @@ import LandingPage from './pages/LandingPage';
 import About from './pages/About';
 import HeroDemo from './pages/HeroDemo';
 import Unauthorized from './pages/Unauthorized';
+import Settings from './pages/Settings';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { token, loading } = useAuth();
@@ -43,6 +44,7 @@ function App() {
                                     <Route path="/upload" element={<Upload />} />
                                     <Route path="/expenses" element={<ExpenseList />} />
                                     <Route path="/reimbursements" element={<ReimbursementHistory />} />
+                                    <Route path="/settings" element={<Settings />} />
                                 </Routes>
                             </Layout>
                         </ProtectedRoute>

@@ -48,6 +48,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         { path: '/upload', label: 'Upload', icon: Upload },
         { path: '/expenses', label: 'Expenses', icon: Receipt },
         { path: '/reimbursements', label: 'Reimbursements', icon: History },
+        { path: '/settings', label: 'Settings', icon: Settings },
     ];
 
     return (

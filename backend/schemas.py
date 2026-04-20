@@ -31,7 +31,7 @@ class CategoryOut(BaseModel):
     icon: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Expense(ExpenseBase):
     id: int
@@ -42,7 +42,7 @@ class Expense(ExpenseBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- Bulk Operations ---
 
@@ -65,7 +65,7 @@ class Reimbursement(ReimbursementBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- Statement Upload ---
 
@@ -78,7 +78,7 @@ class StatementUpload(StatementUploadBase):
     uploaded_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UploadSummary(BaseModel):
     uploaded: int
@@ -100,7 +100,7 @@ class Category(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- Auth ---
 
