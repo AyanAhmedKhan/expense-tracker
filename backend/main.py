@@ -4,7 +4,7 @@ from sqlalchemy import text
 from time import time
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
-from routers import statements, expenses, reimbursements, summary, auth
+from routers import statements, expenses, reimbursements, summary, auth, categories
 import os
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s [%(name)s] %(message)s")
@@ -39,6 +39,7 @@ app.include_router(statements.router)
 app.include_router(expenses.router)
 app.include_router(reimbursements.router)
 app.include_router(summary.router)
+app.include_router(categories.router)
 
 @app.get("/")
 def read_root():

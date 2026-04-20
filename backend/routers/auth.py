@@ -166,3 +166,19 @@ def google_login(google_data: schemas.GoogleLogin, db: Session = Depends(get_db)
 def get_me(current_user: models.User = Depends(get_current_user)):
     logger.info(f"Get me for {current_user.email}")
     return current_user
+
+@router.put("/profile", response_model=schemas.User)
+def update_profile(data: schemas.UserProfileUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    logger.info(f"Profile update for {current_user.email}")
+    return crud.update_user_profile(db, user_id=current_user.id, data=data)
+
+@router.put("/password")
+def change_password(data: schemas.PasswordChange, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    logger.info(f"Password change for {current_user.email}")
+    if not current_user.password_hash:
+        raise HTTPException(status_code=400, detail="Google users cannot change password")
+    if not verify_password(data.old_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    current_user.password_hash = hash_password(data.new_password)
+    db.commit()
+    return {"message": "Password changed successfully"}
