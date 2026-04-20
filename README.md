@@ -1,4 +1,4 @@
-# FinTrack - Expense Tracking Application
+# ExpensesLog - Expense Tracking Application
 
 A full-stack expense tracking application with ICICI bank statement parsing, reimbursement management, and comprehensive authentication.
 
