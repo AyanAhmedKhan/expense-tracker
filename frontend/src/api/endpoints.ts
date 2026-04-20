@@ -1,5 +1,16 @@
 import client from './client';
 
+// ──────────────────────────────────────
+// TYPES
+// ──────────────────────────────────────
+
+export interface CategoryOut {
+    id: number;
+    name: string;
+    color: string;
+    icon: string;
+}
+
 export interface Expense {
     id: number;
     date: string;
@@ -9,6 +20,9 @@ export interface Expense {
     status: 'PENDING' | 'PARTIAL' | 'REIMBURSED';
     reimbursed_amount: number;
     transaction_hash: string;
+    category_id: number | null;
+    is_recurring: boolean;
+    category: CategoryOut | null;
     created_at?: string;
 }
 
@@ -41,6 +55,26 @@ export interface Summary {
     last_reimbursement_date: string | null;
 }
 
+export interface Category {
+    id: number;
+    name: string;
+    color: string;
+    icon: string;
+    created_at: string;
+}
+
+export interface UserProfile {
+    id: number;
+    name: string;
+    email: string;
+    google_id: string | null;
+    created_at: string;
+}
+
+// ──────────────────────────────────────
+// STATEMENTS
+// ──────────────────────────────────────
+
 export const uploadStatement = async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -50,7 +84,11 @@ export const uploadStatement = async (file: File) => {
     return response.data;
 };
 
-export const getExpenses = async (params?: {
+// ──────────────────────────────────────
+// EXPENSES
+// ──────────────────────────────────────
+
+export interface ExpenseFilters {
     skip?: number;
     limit?: number;
     q?: string;
@@ -58,14 +96,64 @@ export const getExpenses = async (params?: {
     source?: string;
     min_amount?: number;
     max_amount?: number;
-    from_date?: string; // YYYY-MM-DD
-    to_date?: string;   // YYYY-MM-DD
+    from_date?: string;
+    to_date?: string;
     sort_by?: 'date' | 'amount' | 'created_at' | 'description';
     order?: 'asc' | 'desc';
-}) => {
+    category_id?: number;
+    is_recurring?: boolean;
+}
+
+export const getExpenses = async (params?: ExpenseFilters) => {
     const response = await client.get<Expense[]>('/expenses/', { params });
     return response.data;
 };
+
+export const updateExpense = async (id: number, data: {
+    description?: string;
+    amount?: number;
+    date?: string;
+    category_id?: number | null;
+    is_recurring?: boolean;
+}) => {
+    const response = await client.put<Expense>(`/expenses/${id}`, data);
+    return response.data;
+};
+
+export const deleteExpense = async (id: number) => {
+    const response = await client.delete(`/expenses/${id}`);
+    return response.data;
+};
+
+export const bulkDeleteExpenses = async (expenseIds: number[]) => {
+    const response = await client.post('/expenses/bulk-delete', { expense_ids: expenseIds });
+    return response.data;
+};
+
+export const exportExpensesCSV = async (params?: ExpenseFilters) => {
+    const response = await client.get('/expenses/export', {
+        params,
+        responseType: 'blob',
+    });
+    // Trigger download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'expenses.csv');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+};
+
+export const detectRecurringExpenses = async () => {
+    const response = await client.post('/expenses/detect-recurring');
+    return response.data;
+};
+
+// ──────────────────────────────────────
+// REIMBURSEMENTS
+// ──────────────────────────────────────
 
 export const createReimbursement = async (expenseIds: number[], note?: string) => {
     const response = await client.post<Reimbursement>('/reimbursements/', {
@@ -85,7 +173,49 @@ export const getReimbursementItems = async (reimbursementId: number) => {
     return response.data;
 };
 
+// ──────────────────────────────────────
+// SUMMARY
+// ──────────────────────────────────────
+
 export const getSummary = async () => {
     const response = await client.get<Summary>('/summary/');
     return response.data;
-}
+};
+
+// ──────────────────────────────────────
+// CATEGORIES
+// ──────────────────────────────────────
+
+export const getCategories = async () => {
+    const response = await client.get<Category[]>('/categories/');
+    return response.data;
+};
+
+export const createCategory = async (data: { name: string; color?: string; icon?: string }) => {
+    const response = await client.post<Category>('/categories/', data);
+    return response.data;
+};
+
+export const deleteCategory = async (id: number) => {
+    const response = await client.delete(`/categories/${id}`);
+    return response.data;
+};
+
+// ──────────────────────────────────────
+// AUTH & PROFILE
+// ──────────────────────────────────────
+
+export const getMe = async () => {
+    const response = await client.get<UserProfile>('/auth/me');
+    return response.data;
+};
+
+export const updateProfile = async (data: { name?: string }) => {
+    const response = await client.put<UserProfile>('/auth/profile', data);
+    return response.data;
+};
+
+export const changePassword = async (data: { old_password: string; new_password: string }) => {
+    const response = await client.put('/auth/password', data);
+    return response.data;
+};

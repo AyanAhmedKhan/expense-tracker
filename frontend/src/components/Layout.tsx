@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Upload, Receipt, History, Moon, Sun, LogOut } from 'lucide-react';
+import { LayoutDashboard, Upload, Receipt, History, Moon, Sun, LogOut, Settings } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../AuthContext';
 import Logo from './Logo';
