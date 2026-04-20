@@ -66,6 +66,64 @@ def get_expenses(
         query = query.order_by(sort_col.desc())
     return query.offset(skip).limit(limit).all()
 
+def get_expenses_paginated(
+    db: Session,
+    page: int = 1,
+    per_page: int = 20,
+    q: str = None,
+    status: models.ExpenseStatus = None,
+    source: str = None,
+    min_amount: float = None,
+    max_amount: float = None,
+    from_date: datetime = None,
+    to_date: datetime = None,
+    sort_by: str = "date",
+    order: str = "desc",
+    user_id: int = None,
+    category_id: int = None,
+    is_recurring: bool = None
+):
+    """Return paginated expenses with total count."""
+    query = db.query(models.Expense).filter(models.Expense.user_id == user_id)
+    if q:
+        query = query.filter(models.Expense.description.ilike(f"%{q}%"))
+    if status:
+        query = query.filter(models.Expense.status == status)
+    if source:
+        query = query.filter(models.Expense.source == source)
+    if min_amount is not None:
+        query = query.filter(models.Expense.amount >= min_amount)
+    if max_amount is not None:
+        query = query.filter(models.Expense.amount <= max_amount)
+    if from_date:
+        query = query.filter(models.Expense.date >= from_date)
+    if to_date:
+        query = query.filter(models.Expense.date <= to_date)
+    if category_id is not None:
+        query = query.filter(models.Expense.category_id == category_id)
+    if is_recurring is not None:
+        query = query.filter(models.Expense.is_recurring == is_recurring)
+
+    total = query.count()
+
+    sort_col = {
+        "date": models.Expense.date,
+        "amount": models.Expense.amount,
+        "created_at": models.Expense.created_at,
+        "description": models.Expense.description,
+    }.get(sort_by, models.Expense.date)
+    if order.lower() == "asc":
+        query = query.order_by(sort_col.asc())
+    else:
+        query = query.order_by(sort_col.desc())
+
+    import math
+    skip = (page - 1) * per_page
+    items = query.offset(skip).limit(per_page).all()
+    pages = math.ceil(total / per_page) if per_page > 0 else 1
+
+    return {"items": items, "total": total, "page": page, "pages": pages, "per_page": per_page}
+
 def delete_expense(db: Session, expense_id: int, user_id: int):
     expense = db.query(models.Expense).filter(
         models.Expense.id == expense_id,
@@ -97,6 +155,18 @@ def delete_expenses_bulk(db: Session, expense_ids: list, user_id: int):
         db.delete(e)
     db.commit()
     return {"deleted": len(deleted_ids), "ids": deleted_ids}
+
+def delete_all_expenses(db: Session, user_id: int):
+    """Delete ALL expenses for a user. Nuclear option."""
+    # Remove all coverage rows first
+    expense_ids = [e.id for e in db.query(models.Expense.id).filter(models.Expense.user_id == user_id).all()]
+    if expense_ids:
+        db.query(models.ReimbursementCoverage).filter(
+            models.ReimbursementCoverage.expense_id.in_(expense_ids)
+        ).delete(synchronize_session=False)
+    count = db.query(models.Expense).filter(models.Expense.user_id == user_id).delete(synchronize_session=False)
+    db.commit()
+    return {"deleted": count}
 
 def update_expense(db: Session, expense_id: int, data: schemas.ExpenseUpdate, user_id: int):
     expense = db.query(models.Expense).filter(
@@ -308,3 +378,74 @@ def update_user_profile(db: Session, user_id: int, data: schemas.UserProfileUpda
     db.commit()
     db.refresh(user)
     return user
+
+# ──────────────────────────────────────
+# AUTO-TAG RULES
+# ──────────────────────────────────────
+
+def get_auto_tag_rules(db: Session, user_id: int):
+    return db.query(models.AutoTagRule).filter(models.AutoTagRule.user_id == user_id).order_by(models.AutoTagRule.keyword).all()
+
+def create_auto_tag_rule(db: Session, rule: schemas.AutoTagRuleCreate, user_id: int):
+    # Normalize keyword to lowercase
+    keyword = rule.keyword.strip().lower()
+    existing = db.query(models.AutoTagRule).filter(
+        models.AutoTagRule.keyword == keyword,
+        models.AutoTagRule.user_id == user_id
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Rule for '{keyword}' already exists")
+    # Verify category belongs to user
+    cat = db.query(models.Category).filter(
+        models.Category.id == rule.category_id,
+        models.Category.user_id == user_id
+    ).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found")
+    db_rule = models.AutoTagRule(keyword=keyword, category_id=rule.category_id, user_id=user_id)
+    db.add(db_rule)
+    db.commit()
+    db.refresh(db_rule)
+    return db_rule
+
+def delete_auto_tag_rule(db: Session, rule_id: int, user_id: int):
+    rule = db.query(models.AutoTagRule).filter(
+        models.AutoTagRule.id == rule_id,
+        models.AutoTagRule.user_id == user_id
+    ).first()
+    if not rule:
+        raise HTTPException(status_code=404, detail="Rule not found")
+    db.delete(rule)
+    db.commit()
+    return {"deleted": True}
+
+def auto_categorize_expense(db: Session, expense: models.Expense, user_id: int):
+    """Match an expense's description against user's auto-tag rules and assign category."""
+    if expense.category_id:  # Already categorized
+        return
+    rules = db.query(models.AutoTagRule).filter(models.AutoTagRule.user_id == user_id).all()
+    desc_lower = expense.description.lower()
+    for rule in rules:
+        if rule.keyword in desc_lower:
+            expense.category_id = rule.category_id
+            return
+
+def apply_auto_tags_to_all(db: Session, user_id: int):
+    """Re-apply auto-tag rules to all uncategorized expenses."""
+    rules = db.query(models.AutoTagRule).filter(models.AutoTagRule.user_id == user_id).all()
+    if not rules:
+        return {"tagged": 0}
+    uncategorized = db.query(models.Expense).filter(
+        models.Expense.user_id == user_id,
+        models.Expense.category_id == None
+    ).all()
+    tagged = 0
+    for expense in uncategorized:
+        desc_lower = expense.description.lower()
+        for rule in rules:
+            if rule.keyword in desc_lower:
+                expense.category_id = rule.category_id
+                tagged += 1
+                break
+    db.commit()
+    return {"tagged": tagged}

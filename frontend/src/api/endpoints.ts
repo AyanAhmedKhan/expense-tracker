@@ -26,6 +26,14 @@ export interface Expense {
     created_at?: string;
 }
 
+export interface PaginatedExpenses {
+    items: Expense[];
+    total: number;
+    page: number;
+    pages: number;
+    per_page: number;
+}
+
 export interface Reimbursement {
     id: number;
     date: string;
@@ -46,6 +54,7 @@ export interface UploadSummary {
     uploaded: number;
     existing: number;
     new_added: number;
+    auto_tagged?: number;
 }
 
 export interface Summary {
@@ -60,6 +69,14 @@ export interface Category {
     name: string;
     color: string;
     icon: string;
+    created_at: string;
+}
+
+export interface AutoTagRule {
+    id: number;
+    keyword: string;
+    category_id: number;
+    category: CategoryOut | null;
     created_at: string;
 }
 
@@ -89,8 +106,8 @@ export const uploadStatement = async (file: File) => {
 // ──────────────────────────────────────
 
 export interface ExpenseFilters {
-    skip?: number;
-    limit?: number;
+    page?: number;
+    per_page?: number;
     q?: string;
     status?: 'PENDING' | 'PARTIAL' | 'REIMBURSED';
     source?: string;
@@ -105,7 +122,7 @@ export interface ExpenseFilters {
 }
 
 export const getExpenses = async (params?: ExpenseFilters) => {
-    const response = await client.get<Expense[]>('/expenses/', { params });
+    const response = await client.get<PaginatedExpenses>('/expenses/', { params });
     return response.data;
 };
 
@@ -130,12 +147,16 @@ export const bulkDeleteExpenses = async (expenseIds: number[]) => {
     return response.data;
 };
 
+export const deleteAllExpenses = async () => {
+    const response = await client.delete('/expenses/all');
+    return response.data;
+};
+
 export const exportExpensesCSV = async (params?: ExpenseFilters) => {
     const response = await client.get('/expenses/export', {
         params,
         responseType: 'blob',
     });
-    // Trigger download
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -148,6 +169,11 @@ export const exportExpensesCSV = async (params?: ExpenseFilters) => {
 
 export const detectRecurringExpenses = async () => {
     const response = await client.post('/expenses/detect-recurring');
+    return response.data;
+};
+
+export const applyAutoTags = async () => {
+    const response = await client.post('/expenses/apply-auto-tags');
     return response.data;
 };
 
@@ -198,6 +224,25 @@ export const createCategory = async (data: { name: string; color?: string; icon?
 
 export const deleteCategory = async (id: number) => {
     const response = await client.delete(`/categories/${id}`);
+    return response.data;
+};
+
+// ──────────────────────────────────────
+// AUTO-TAG RULES
+// ──────────────────────────────────────
+
+export const getAutoTagRules = async () => {
+    const response = await client.get<AutoTagRule[]>('/categories/auto-tag-rules');
+    return response.data;
+};
+
+export const createAutoTagRule = async (data: { keyword: string; category_id: number }) => {
+    const response = await client.post<AutoTagRule>('/categories/auto-tag-rules', data);
+    return response.data;
+};
+
+export const deleteAutoTagRule = async (id: number) => {
+    const response = await client.delete(`/categories/auto-tag-rules/${id}`);
     return response.data;
 };
 

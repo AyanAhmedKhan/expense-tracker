@@ -56,6 +56,17 @@ MIGRATIONS = [
         END IF;
     END $$;
     """,
+    # 4. Create auto_tag_rules table
+    """
+    CREATE TABLE IF NOT EXISTS auto_tag_rules (
+        id SERIAL PRIMARY KEY,
+        keyword VARCHAR NOT NULL,
+        category_id INTEGER REFERENCES categories(id) NOT NULL,
+        user_id INTEGER REFERENCES users(id) NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(keyword, user_id)
+    );
+    """,
 ]
 
 def run_migrations():

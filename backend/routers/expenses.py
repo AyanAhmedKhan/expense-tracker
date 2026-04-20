@@ -13,10 +13,10 @@ router = APIRouter(
     tags=["expenses"]
 )
 
-@router.get("/", response_model=List[schemas.Expense])
+@router.get("/", response_model=schemas.PaginatedExpenses)
 def read_expenses(
-    skip: int = 0,
-    limit: int = 100,
+    page: int = 1,
+    per_page: int = 20,
     q: Optional[str] = None,
     status: Optional[models.ExpenseStatus] = None,
     source: Optional[str] = None,
@@ -31,14 +31,13 @@ def read_expenses(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    # Convert date strings to datetime if provided
     from datetime import datetime
     from_date_dt = datetime.strptime(from_date, "%Y-%m-%d") if from_date else None
     to_date_dt = datetime.strptime(to_date, "%Y-%m-%d") if to_date else None
-    expenses = crud.get_expenses(
+    return crud.get_expenses_paginated(
         db,
-        skip=skip,
-        limit=limit,
+        page=page,
+        per_page=per_page,
         q=q,
         status=status,
         source=source,
@@ -52,7 +51,6 @@ def read_expenses(
         category_id=category_id,
         is_recurring=is_recurring
     )
-    return expenses
 
 @router.post("/", response_model=schemas.Expense)
 def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
@@ -69,6 +67,10 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db), current_user:
 @router.post("/bulk-delete")
 def bulk_delete_expenses(body: schemas.BulkDeleteRequest, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     return crud.delete_expenses_bulk(db, body.expense_ids, user_id=current_user.id)
+
+@router.delete("/all")
+def delete_all_expenses(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    return crud.delete_all_expenses(db, user_id=current_user.id)
 
 @router.get("/export")
 def export_expenses_csv(
@@ -125,3 +127,7 @@ def export_expenses_csv(
 @router.post("/detect-recurring")
 def detect_recurring(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     return crud.detect_recurring_expenses(db, user_id=current_user.id)
+
+@router.post("/apply-auto-tags")
+def apply_auto_tags(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    return crud.apply_auto_tags_to_all(db, user_id=current_user.id)

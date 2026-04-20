@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { getMe, updateProfile, changePassword, getCategories, createCategory, deleteCategory, Category, UserProfile } from '../api/endpoints';
-import { User, Lock, Tag, Plus, Trash2, Palette, Sun, Moon } from 'lucide-react';
+import { getMe, updateProfile, changePassword, getCategories, createCategory, deleteCategory, getAutoTagRules, createAutoTagRule, deleteAutoTagRule, Category, AutoTagRule, UserProfile } from '../api/endpoints';
+import { User, Lock, Tag, Plus, Trash2, Palette, Sun, Moon, Zap } from 'lucide-react';
 
 const PRESET_COLORS = [
     '#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6',
@@ -28,12 +28,20 @@ const Settings: React.FC = () => {
     const [catLoading, setCatLoading] = useState(false);
     const [catMsg, setCatMsg] = useState('');
 
+    // Auto-Tag Rules
+    const [rules, setRules] = useState<AutoTagRule[]>([]);
+    const [newRuleKeyword, setNewRuleKeyword] = useState('');
+    const [newRuleCategoryId, setNewRuleCategoryId] = useState<number | ''>('');
+    const [ruleLoading, setRuleLoading] = useState(false);
+    const [ruleMsg, setRuleMsg] = useState('');
+
     // Dark mode
     const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
 
     useEffect(() => {
         fetchProfile();
         fetchCategories();
+        fetchRules();
     }, []);
 
     const fetchProfile = async () => {
@@ -41,93 +49,86 @@ const Settings: React.FC = () => {
             const data = await getMe();
             setProfile(data);
             setEditName(data.name);
-        } catch {
-            console.error('Failed to fetch profile');
-        }
+        } catch { console.error('Failed to fetch profile'); }
     };
 
     const fetchCategories = async () => {
-        try {
-            const data = await getCategories();
-            setCategories(data);
-        } catch {
-            console.error('Failed to fetch categories');
-        }
+        try { setCategories(await getCategories()); } catch { console.error('Failed to fetch categories'); }
+    };
+
+    const fetchRules = async () => {
+        try { setRules(await getAutoTagRules()); } catch { console.error('Failed to fetch rules'); }
     };
 
     // ── Profile ──
     const handleProfileUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
-        setProfileLoading(true);
-        setProfileMsg('');
+        setProfileLoading(true); setProfileMsg('');
         try {
             const updated = await updateProfile({ name: editName });
             setProfile(updated);
             setProfileMsg('Profile updated successfully!');
             setTimeout(() => setProfileMsg(''), 3000);
-        } catch (error) {
-            setProfileMsg('Failed to update profile');
-        } finally {
-            setProfileLoading(false);
-        }
+        } catch { setProfileMsg('Failed to update profile');
+        } finally { setProfileLoading(false); }
     };
 
     // ── Password ──
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (newPassword !== confirmPassword) {
-            setPasswordMsg('Passwords do not match');
-            return;
-        }
-        if (newPassword.length < 6) {
-            setPasswordMsg('Password must be at least 6 characters');
-            return;
-        }
-        setPasswordLoading(true);
-        setPasswordMsg('');
+        if (newPassword !== confirmPassword) { setPasswordMsg('Passwords do not match'); return; }
+        if (newPassword.length < 6) { setPasswordMsg('Password must be at least 6 characters'); return; }
+        setPasswordLoading(true); setPasswordMsg('');
         try {
             await changePassword({ old_password: oldPassword, new_password: newPassword });
             setPasswordMsg('Password changed successfully!');
-            setOldPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
+            setOldPassword(''); setNewPassword(''); setConfirmPassword('');
             setTimeout(() => setPasswordMsg(''), 3000);
         } catch (error: any) {
-            const detail = error?.response?.data?.detail || 'Failed to change password';
-            setPasswordMsg(detail);
-        } finally {
-            setPasswordLoading(false);
-        }
+            setPasswordMsg(error?.response?.data?.detail || 'Failed to change password');
+        } finally { setPasswordLoading(false); }
     };
 
     // ── Categories ──
     const handleAddCategory = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newCatName.trim()) return;
-        setCatLoading(true);
-        setCatMsg('');
+        setCatLoading(true); setCatMsg('');
         try {
             await createCategory({ name: newCatName.trim(), color: newCatColor });
-            setNewCatName('');
-            setNewCatColor('#6366f1');
+            setNewCatName(''); setNewCatColor('#6366f1');
             fetchCategories();
             setCatMsg('Category added!');
             setTimeout(() => setCatMsg(''), 3000);
         } catch (error: any) {
             setCatMsg(error?.response?.data?.detail || 'Failed to add category');
-        } finally {
-            setCatLoading(false);
-        }
+        } finally { setCatLoading(false); }
     };
 
     const handleDeleteCategory = async (id: number) => {
         if (!confirm('Delete this category? Expenses with this category will be uncategorized.')) return;
+        try { await deleteCategory(id); fetchCategories(); } catch { alert('Failed to delete category'); }
+    };
+
+    // ── Auto-Tag Rules ──
+    const handleAddRule = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newRuleKeyword.trim() || !newRuleCategoryId) return;
+        setRuleLoading(true); setRuleMsg('');
         try {
-            await deleteCategory(id);
-            fetchCategories();
-        } catch {
-            alert('Failed to delete category');
-        }
+            await createAutoTagRule({ keyword: newRuleKeyword.trim(), category_id: Number(newRuleCategoryId) });
+            setNewRuleKeyword(''); setNewRuleCategoryId('');
+            fetchRules();
+            setRuleMsg('Rule added! New uploads will auto-tag matching expenses.');
+            setTimeout(() => setRuleMsg(''), 4000);
+        } catch (error: any) {
+            setRuleMsg(error?.response?.data?.detail || 'Failed to add rule');
+        } finally { setRuleLoading(false); }
+    };
+
+    const handleDeleteRule = async (id: number) => {
+        if (!confirm('Delete this auto-tag rule?')) return;
+        try { await deleteAutoTagRule(id); fetchRules(); } catch { alert('Failed to delete rule'); }
     };
 
     // ── Dark Mode ──
@@ -135,11 +136,8 @@ const Settings: React.FC = () => {
         const newMode = !darkMode;
         setDarkMode(newMode);
         localStorage.setItem('darkMode', String(newMode));
-        if (newMode) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
+        if (newMode) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
     };
 
     const isGoogleUser = profile?.google_id != null;
@@ -159,10 +157,8 @@ const Settings: React.FC = () => {
                         <p className="font-medium text-gray-700 dark:text-gray-300">Dark Mode</p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Switch between light and dark theme</p>
                     </div>
-                    <button
-                        onClick={toggleDarkMode}
-                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${darkMode ? 'bg-blue-600' : 'bg-gray-300'}`}
-                    >
+                    <button onClick={toggleDarkMode}
+                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${darkMode ? 'bg-blue-600' : 'bg-gray-300'}`}>
                         <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
                 </div>
@@ -171,8 +167,7 @@ const Settings: React.FC = () => {
             {/* ── Profile ── */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-                    <User size={20} />
-                    Profile
+                    <User size={20} /> Profile
                 </h3>
                 <form onSubmit={handleProfileUpdate} className="space-y-4">
                     <div>
@@ -205,8 +200,7 @@ const Settings: React.FC = () => {
             {!isGoogleUser && (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-                        <Lock size={20} />
-                        Change Password
+                        <Lock size={20} /> Change Password
                     </h3>
                     <form onSubmit={handlePasswordChange} className="space-y-4">
                         <div>
@@ -238,12 +232,10 @@ const Settings: React.FC = () => {
             {/* ── Categories ── */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-                    <Tag size={20} />
-                    Expense Categories
+                    <Tag size={20} /> Expense Categories
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Manage categories to organize your expenses. Default categories are auto-created on first use.</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Manage categories to organize your expenses.</p>
 
-                {/* Existing Categories */}
                 <div className="space-y-2 mb-6">
                     {categories.map((cat) => (
                         <div key={cat.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700">
@@ -251,16 +243,14 @@ const Settings: React.FC = () => {
                                 <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
                                 <span className="font-medium text-gray-800 dark:text-gray-200 text-sm">{cat.name}</span>
                             </div>
-                            <button onClick={() => handleDeleteCategory(cat.id)}
-                                className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" title="Delete">
+                            <button onClick={() => handleDeleteCategory(cat.id)} className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" title="Delete">
                                 <Trash2 size={14} />
                             </button>
                         </div>
                     ))}
-                    {categories.length === 0 && <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">No categories yet. They'll be auto-created when you first view expenses.</p>}
+                    {categories.length === 0 && <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">No categories yet.</p>}
                 </div>
 
-                {/* Add New Category */}
                 <form onSubmit={handleAddCategory} className="flex flex-col sm:flex-row gap-3">
                     <input type="text" placeholder="Category name..." value={newCatName} onChange={(e) => setNewCatName(e.target.value)} required
                         className="flex-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" />
@@ -276,11 +266,62 @@ const Settings: React.FC = () => {
                     </div>
                     <button type="submit" disabled={catLoading}
                         className="flex items-center justify-center gap-1.5 bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 whitespace-nowrap">
-                        <Plus size={16} />
-                        {catLoading ? 'Adding...' : 'Add'}
+                        <Plus size={16} />{catLoading ? 'Adding...' : 'Add'}
                     </button>
                 </form>
                 {catMsg && <p className={`text-sm mt-2 ${catMsg.includes('added') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{catMsg}</p>}
+            </div>
+
+            {/* ── Auto-Tag Rules ── */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-2">
+                    <Zap size={20} className="text-amber-500" /> Auto-Tag Rules
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Define keyword → category rules. When you upload a statement, if the expense description contains the keyword, it automatically gets tagged with the category.
+                </p>
+                <p className="text-xs text-blue-500 dark:text-blue-400 mb-4 bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg">
+                    💡 Example: keyword <code className="font-mono bg-blue-100 dark:bg-blue-900/40 px-1.5 py-0.5 rounded text-xs">jiomart</code> → category <strong>Groceries</strong> will auto-tag all JioMart transactions.
+                </p>
+
+                {/* Existing Rules */}
+                <div className="space-y-2 mb-6">
+                    {rules.map((rule) => (
+                        <div key={rule.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700">
+                            <div className="flex items-center gap-3 flex-wrap">
+                                <code className="font-mono text-sm bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded">{rule.keyword}</code>
+                                <span className="text-gray-400 dark:text-gray-500">→</span>
+                                {rule.category ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: rule.category.color + '20', color: rule.category.color }}>
+                                        <Tag size={10} />{rule.category.name}
+                                    </span>
+                                ) : (
+                                    <span className="text-xs text-gray-400 dark:text-gray-500">Unknown category</span>
+                                )}
+                            </div>
+                            <button onClick={() => handleDeleteRule(rule.id)} className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" title="Delete rule">
+                                <Trash2 size={14} />
+                            </button>
+                        </div>
+                    ))}
+                    {rules.length === 0 && <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">No auto-tag rules yet. Add one below!</p>}
+                </div>
+
+                {/* Add New Rule */}
+                <form onSubmit={handleAddRule} className="flex flex-col sm:flex-row gap-3">
+                    <input type="text" placeholder="Keyword (e.g., jiomart, swiggy, uber)" value={newRuleKeyword} onChange={(e) => setNewRuleKeyword(e.target.value)} required
+                        className="flex-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors font-mono" />
+                    <select value={newRuleCategoryId} onChange={(e) => setNewRuleCategoryId(e.target.value ? Number(e.target.value) : '')} required
+                        className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors min-w-[150px]">
+                        <option value="">Select category</option>
+                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                    <button type="submit" disabled={ruleLoading}
+                        className="flex items-center justify-center gap-1.5 bg-amber-500 dark:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-600 dark:hover:bg-amber-700 transition-colors disabled:opacity-50 whitespace-nowrap">
+                        <Plus size={16} />{ruleLoading ? 'Adding...' : 'Add Rule'}
+                    </button>
+                </form>
+                {ruleMsg && <p className={`text-sm mt-2 ${ruleMsg.includes('added') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{ruleMsg}</p>}
             </div>
         </div>
     );

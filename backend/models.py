@@ -23,6 +23,22 @@ class Category(Base):
         UniqueConstraint('name', 'user_id', name='uix_category_name_user'),
     )
 
+class AutoTagRule(Base):
+    """User-defined rules: if expense description contains `keyword`, assign `category_id`."""
+    __tablename__ = "auto_tag_rules"
+
+    id = Column(Integer, primary_key=True, index=True)
+    keyword = Column(String, nullable=False)        # e.g., "jiomart"
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    category = relationship("Category", lazy="joined")
+
+    __table_args__ = (
+        UniqueConstraint('keyword', 'user_id', name='uix_autotag_keyword_user'),
+    )
+
 class Expense(Base):
     __tablename__ = "expenses"
 

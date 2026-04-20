@@ -23,3 +23,17 @@ def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_
 @router.delete("/{category_id}")
 def delete_category(category_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     return crud.delete_category(db, category_id, user_id=current_user.id)
+
+# ── Auto-Tag Rules ──
+
+@router.get("/auto-tag-rules", response_model=List[schemas.AutoTagRule])
+def read_auto_tag_rules(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    return crud.get_auto_tag_rules(db, user_id=current_user.id)
+
+@router.post("/auto-tag-rules", response_model=schemas.AutoTagRule)
+def create_auto_tag_rule(rule: schemas.AutoTagRuleCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    return crud.create_auto_tag_rule(db, rule, user_id=current_user.id)
+
+@router.delete("/auto-tag-rules/{rule_id}")
+def delete_auto_tag_rule(rule_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    return crud.delete_auto_tag_rule(db, rule_id, user_id=current_user.id)

@@ -138,3 +138,28 @@ class UserProfileUpdate(BaseModel):
 class PasswordChange(BaseModel):
     old_password: str
     new_password: str
+
+# --- Auto-Tag Rules ---
+
+class AutoTagRuleCreate(BaseModel):
+    keyword: str
+    category_id: int
+
+class AutoTagRule(BaseModel):
+    id: int
+    keyword: str
+    category_id: int
+    category: Optional[CategoryOut] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# --- Paginated Response ---
+
+class PaginatedExpenses(BaseModel):
+    items: List[Expense]
+    total: int
+    page: int
+    pages: int
+    per_page: int

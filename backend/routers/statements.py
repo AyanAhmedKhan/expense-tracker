@@ -22,10 +22,11 @@ async def upload_statement(file: UploadFile = File(...), db: Session = Depends(g
                 file_name=file.filename,
                 num_transactions_imported=0
             ), user_id=current_user.id)
-            return {"uploaded": 1, "existing": 0, "new_added": 0}
+            return {"uploaded": 1, "existing": 0, "new_added": 0, "auto_tagged": 0}
         
         new_added = 0
         existing = 0
+        auto_tagged = 0
         
         for txn in transactions:
             try:
@@ -41,11 +42,20 @@ async def upload_statement(file: UploadFile = File(...), db: Session = Depends(g
                     **txn,
                     transaction_hash=txn_hash
                 )
-                crud.create_expense(db, expense_create, user_id=current_user.id)
+                db_expense = crud.create_expense(db, expense_create, user_id=current_user.id)
+                
+                # Auto-tag based on user's rules
+                crud.auto_categorize_expense(db, db_expense, user_id=current_user.id)
+                if db_expense.category_id:
+                    auto_tagged += 1
+                
                 new_added += 1
             except Exception as e:
                 print(f"Error processing transaction: {e}, Transaction: {txn}")
                 continue
+        
+        # Commit any auto-tag changes
+        db.commit()
             
         # Record upload
         crud.create_statement_upload(db, schemas.StatementUploadBase(
@@ -56,7 +66,8 @@ async def upload_statement(file: UploadFile = File(...), db: Session = Depends(g
         return {
             "uploaded": 1,
             "existing": existing,
-            "new_added": new_added
+            "new_added": new_added,
+            "auto_tagged": auto_tagged
         }
     except HTTPException:
         raise
