@@ -1,6 +1,12 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+from fastapi import HTTPException
 import models, schemas
-from datetime import datetime
+from datetime import datetime, timedelta
+
+# ──────────────────────────────────────
+# EXPENSES
+# ──────────────────────────────────────
 
 def get_expense_by_hash(db: Session, transaction_hash: str, user_id: int):
     return db.query(models.Expense).filter(models.Expense.transaction_hash == transaction_hash, models.Expense.user_id == user_id).first()
@@ -25,7 +31,9 @@ def get_expenses(
     to_date: datetime = None,
     sort_by: str = "date",
     order: str = "desc",
-    user_id: int = None
+    user_id: int = None,
+    category_id: int = None,
+    is_recurring: bool = None
 ):
     query = db.query(models.Expense).filter(models.Expense.user_id == user_id)
     if q:
@@ -42,6 +50,10 @@ def get_expenses(
         query = query.filter(models.Expense.date >= from_date)
     if to_date:
         query = query.filter(models.Expense.date <= to_date)
+    if category_id is not None:
+        query = query.filter(models.Expense.category_id == category_id)
+    if is_recurring is not None:
+        query = query.filter(models.Expense.is_recurring == is_recurring)
     sort_col = {
         "date": models.Expense.date,
         "amount": models.Expense.amount,
@@ -54,6 +66,160 @@ def get_expenses(
         query = query.order_by(sort_col.desc())
     return query.offset(skip).limit(limit).all()
 
+def delete_expense(db: Session, expense_id: int, user_id: int):
+    expense = db.query(models.Expense).filter(
+        models.Expense.id == expense_id,
+        models.Expense.user_id == user_id
+    ).first()
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    # Also remove any reimbursement coverage rows
+    db.query(models.ReimbursementCoverage).filter(
+        models.ReimbursementCoverage.expense_id == expense_id
+    ).delete()
+    db.delete(expense)
+    db.commit()
+    return {"deleted": True}
+
+def delete_expenses_bulk(db: Session, expense_ids: list, user_id: int):
+    expenses = db.query(models.Expense).filter(
+        models.Expense.id.in_(expense_ids),
+        models.Expense.user_id == user_id
+    ).all()
+    if not expenses:
+        raise HTTPException(status_code=404, detail="No matching expenses found")
+    deleted_ids = [e.id for e in expenses]
+    # Remove coverage rows
+    db.query(models.ReimbursementCoverage).filter(
+        models.ReimbursementCoverage.expense_id.in_(deleted_ids)
+    ).delete(synchronize_session=False)
+    for e in expenses:
+        db.delete(e)
+    db.commit()
+    return {"deleted": len(deleted_ids), "ids": deleted_ids}
+
+def update_expense(db: Session, expense_id: int, data: schemas.ExpenseUpdate, user_id: int):
+    expense = db.query(models.Expense).filter(
+        models.Expense.id == expense_id,
+        models.Expense.user_id == user_id
+    ).first()
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    update_data = data.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(expense, key, value)
+    db.commit()
+    db.refresh(expense)
+    return expense
+
+def detect_recurring_expenses(db: Session, user_id: int):
+    """Detect recurring expenses: descriptions appearing >= 3 times in last 90 days."""
+    cutoff = datetime.utcnow() - timedelta(days=90)
+    
+    # Known subscription keywords
+    subscription_keywords = [
+        'netflix', 'spotify', 'youtube', 'amazon prime', 'hotstar', 'disney',
+        'jio', 'airtel', 'vi ', 'bsnl', 'subscription', 'premium',
+        'apple', 'google one', 'icloud', 'microsoft', 'adobe',
+        'gym', 'membership', 'insurance', 'emi', 'sip',
+        'electricity', 'water bill', 'gas bill', 'internet', 'broadband',
+        'rent', 'maintenance'
+    ]
+    
+    # Find descriptions with >= 3 occurrences in last 90 days
+    recurring_descriptions = db.query(
+        models.Expense.description,
+        func.count(models.Expense.id).label('count')
+    ).filter(
+        models.Expense.user_id == user_id,
+        models.Expense.date >= cutoff
+    ).group_by(
+        models.Expense.description
+    ).having(
+        func.count(models.Expense.id) >= 3
+    ).all()
+    
+    recurring_descs = {r.description for r in recurring_descriptions}
+    
+    # Also flag known subscription keywords
+    all_expenses = db.query(models.Expense).filter(
+        models.Expense.user_id == user_id,
+        models.Expense.date >= cutoff
+    ).all()
+    
+    updated_count = 0
+    for expense in all_expenses:
+        desc_lower = expense.description.lower()
+        is_sub = any(kw in desc_lower for kw in subscription_keywords)
+        is_freq = expense.description in recurring_descs
+        should_be_recurring = is_sub or is_freq
+        
+        if expense.is_recurring != should_be_recurring:
+            expense.is_recurring = should_be_recurring
+            updated_count += 1
+    
+    db.commit()
+    return {"updated": updated_count}
+
+# ──────────────────────────────────────
+# CATEGORIES
+# ──────────────────────────────────────
+
+DEFAULT_CATEGORIES = [
+    {"name": "Food & Dining", "color": "#ef4444", "icon": "utensils"},
+    {"name": "Transport", "color": "#3b82f6", "icon": "car"},
+    {"name": "Shopping", "color": "#8b5cf6", "icon": "shopping-bag"},
+    {"name": "Groceries", "color": "#22c55e", "icon": "apple"},
+    {"name": "Bills & Utilities", "color": "#f59e0b", "icon": "zap"},
+    {"name": "Entertainment", "color": "#ec4899", "icon": "film"},
+    {"name": "Health", "color": "#14b8a6", "icon": "heart"},
+    {"name": "Other", "color": "#6b7280", "icon": "tag"},
+]
+
+def seed_default_categories(db: Session, user_id: int):
+    """Create default categories if user has none."""
+    existing = db.query(models.Category).filter(models.Category.user_id == user_id).count()
+    if existing > 0:
+        return
+    for cat in DEFAULT_CATEGORIES:
+        db.add(models.Category(**cat, user_id=user_id))
+    db.commit()
+
+def get_categories(db: Session, user_id: int):
+    return db.query(models.Category).filter(models.Category.user_id == user_id).order_by(models.Category.name).all()
+
+def create_category(db: Session, category: schemas.CategoryCreate, user_id: int):
+    existing = db.query(models.Category).filter(
+        models.Category.name == category.name,
+        models.Category.user_id == user_id
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Category already exists")
+    db_cat = models.Category(**category.dict(), user_id=user_id)
+    db.add(db_cat)
+    db.commit()
+    db.refresh(db_cat)
+    return db_cat
+
+def delete_category(db: Session, category_id: int, user_id: int):
+    cat = db.query(models.Category).filter(
+        models.Category.id == category_id,
+        models.Category.user_id == user_id
+    ).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found")
+    # Unlink expenses from this category
+    db.query(models.Expense).filter(
+        models.Expense.category_id == category_id
+    ).update({"category_id": None}, synchronize_session=False)
+    db.delete(cat)
+    db.commit()
+    return {"deleted": True}
+
+# ──────────────────────────────────────
+# REIMBURSEMENTS
+# ──────────────────────────────────────
+
 def create_reimbursement(db: Session, reimbursement: schemas.ReimbursementCreate, user_id: int):
     # Calculate total amount from selected expenses
     expenses = db.query(models.Expense).filter(models.Expense.id.in_(reimbursement.expense_ids), models.Expense.user_id == user_id).all()
@@ -65,7 +231,6 @@ def create_reimbursement(db: Session, reimbursement: schemas.ReimbursementCreate
     total_amount = sum(e.amount - e.reimbursed_amount for e in applicable)
     if total_amount <= 0 or not applicable:
         # Nothing to reimburse
-        from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="No reimbursable expenses selected")
     
     db_reimbursement = models.Reimbursement(
@@ -118,9 +283,28 @@ def get_reimbursement_items(db: Session, reimbursement_id: int):
         }
     for e in expenses]
 
+# ──────────────────────────────────────
+# STATEMENT UPLOADS
+# ──────────────────────────────────────
+
 def create_statement_upload(db: Session, upload: schemas.StatementUploadBase, user_id: int):
     db_upload = models.StatementUpload(**upload.dict(), user_id=user_id)
     db.add(db_upload)
     db.commit()
     db.refresh(db_upload)
     return db_upload
+
+# ──────────────────────────────────────
+# USER PROFILE
+# ──────────────────────────────────────
+
+def update_user_profile(db: Session, user_id: int, data: schemas.UserProfileUpdate):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    update_data = data.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(user, key, value)
+    db.commit()
+    db.refresh(user)
+    return user

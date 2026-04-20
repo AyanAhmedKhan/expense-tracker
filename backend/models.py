@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum, UniqueConstraint, Boolean
 from sqlalchemy.orm import relationship
 from database import Base
 import enum
@@ -8,6 +8,20 @@ class ExpenseStatus(str, enum.Enum):
     PENDING = "PENDING"
     PARTIAL = "PARTIAL"
     REIMBURSED = "REIMBURSED"
+
+class Category(Base):
+    __tablename__ = "categories"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    color = Column(String, default="#6366f1")  # Hex color for UI
+    icon = Column(String, default="tag")       # Icon name for UI
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint('name', 'user_id', name='uix_category_name_user'),
+    )
 
 class Expense(Base):
     __tablename__ = "expenses"
@@ -21,7 +35,11 @@ class Expense(Base):
     reimbursed_amount = Column(Float, default=0.0)
     transaction_hash = Column(String, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
+    is_recurring = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    category = relationship("Category", backref="expenses", lazy="joined")
 
     __table_args__ = (
         UniqueConstraint('transaction_hash', 'user_id', name='uix_expense_hash_user'),
