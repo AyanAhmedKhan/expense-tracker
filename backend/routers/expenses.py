@@ -13,6 +13,8 @@ router = APIRouter(
     tags=["expenses"]
 )
 
+# ─── Static routes MUST come before /{expense_id} parameterized routes ───
+
 @router.get("/", response_model=schemas.PaginatedExpenses)
 def read_expenses(
     page: int = 1,
@@ -55,14 +57,6 @@ def read_expenses(
 @router.post("/", response_model=schemas.Expense)
 def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     return crud.create_expense(db, expense, user_id=current_user.id)
-
-@router.put("/{expense_id}", response_model=schemas.Expense)
-def update_expense(expense_id: int, data: schemas.ExpenseUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    return crud.update_expense(db, expense_id, data, user_id=current_user.id)
-
-@router.delete("/{expense_id}")
-def delete_expense(expense_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    return crud.delete_expense(db, expense_id, user_id=current_user.id)
 
 @router.post("/bulk-delete")
 def bulk_delete_expenses(body: schemas.BulkDeleteRequest, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
@@ -131,3 +125,13 @@ def detect_recurring(db: Session = Depends(get_db), current_user: models.User = 
 @router.post("/apply-auto-tags")
 def apply_auto_tags(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     return crud.apply_auto_tags_to_all(db, user_id=current_user.id)
+
+# ─── Parameterized routes LAST ───
+
+@router.put("/{expense_id}", response_model=schemas.Expense)
+def update_expense(expense_id: int, data: schemas.ExpenseUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    return crud.update_expense(db, expense_id, data, user_id=current_user.id)
+
+@router.delete("/{expense_id}")
+def delete_expense(expense_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    return crud.delete_expense(db, expense_id, user_id=current_user.id)

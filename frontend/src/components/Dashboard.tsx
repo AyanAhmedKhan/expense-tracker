@@ -11,12 +11,12 @@ const Dashboard: React.FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [summaryData, expensesData] = await Promise.all([
+                const [summaryData, expensesResult] = await Promise.all([
                     getSummary(),
-                    getExpenses({ limit: 1000, sort_by: 'date', order: 'desc' }) // Fetch recent 1000 expenses for analytics
+                    getExpenses({ page: 1, per_page: 1000, sort_by: 'date', order: 'desc' })
                 ]);
                 setSummary(summaryData);
-                setExpenses(expensesData);
+                setExpenses(expensesResult.items);
             } catch (error) {
                 console.error('Failed to fetch dashboard data', error);
             } finally {

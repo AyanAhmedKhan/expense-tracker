@@ -246,13 +246,87 @@ DEFAULT_CATEGORIES = [
     {"name": "Other", "color": "#6b7280", "icon": "tag"},
 ]
 
+# keyword → category name (must match a DEFAULT_CATEGORIES name)
+DEFAULT_AUTO_TAG_RULES = [
+    # Food & Dining
+    {"keyword": "swiggy", "category": "Food & Dining"},
+    {"keyword": "zomato", "category": "Food & Dining"},
+    {"keyword": "dominos", "category": "Food & Dining"},
+    {"keyword": "mcdonald", "category": "Food & Dining"},
+    {"keyword": "kfc", "category": "Food & Dining"},
+    {"keyword": "burger king", "category": "Food & Dining"},
+    {"keyword": "starbucks", "category": "Food & Dining"},
+    {"keyword": "cafe", "category": "Food & Dining"},
+    {"keyword": "restaurant", "category": "Food & Dining"},
+    # Groceries
+    {"keyword": "instamart", "category": "Groceries"},
+    {"keyword": "jiomart", "category": "Groceries"},
+    {"keyword": "bigbasket", "category": "Groceries"},
+    {"keyword": "blinkit", "category": "Groceries"},
+    {"keyword": "zepto", "category": "Groceries"},
+    {"keyword": "dmart", "category": "Groceries"},
+    {"keyword": "grofers", "category": "Groceries"},
+    # Transport
+    {"keyword": "uber", "category": "Transport"},
+    {"keyword": "ola", "category": "Transport"},
+    {"keyword": "rapido", "category": "Transport"},
+    {"keyword": "irctc", "category": "Transport"},
+    {"keyword": "metro", "category": "Transport"},
+    {"keyword": "petrol", "category": "Transport"},
+    {"keyword": "diesel", "category": "Transport"},
+    {"keyword": "fuel", "category": "Transport"},
+    # Shopping
+    {"keyword": "amazon", "category": "Shopping"},
+    {"keyword": "flipkart", "category": "Shopping"},
+    {"keyword": "myntra", "category": "Shopping"},
+    {"keyword": "ajio", "category": "Shopping"},
+    {"keyword": "nykaa", "category": "Shopping"},
+    {"keyword": "meesho", "category": "Shopping"},
+    # Entertainment
+    {"keyword": "netflix", "category": "Entertainment"},
+    {"keyword": "spotify", "category": "Entertainment"},
+    {"keyword": "hotstar", "category": "Entertainment"},
+    {"keyword": "youtube premium", "category": "Entertainment"},
+    {"keyword": "prime video", "category": "Entertainment"},
+    {"keyword": "bookmyshow", "category": "Entertainment"},
+    {"keyword": "pvr", "category": "Entertainment"},
+    {"keyword": "inox", "category": "Entertainment"},
+    # Bills & Utilities
+    {"keyword": "electricity", "category": "Bills & Utilities"},
+    {"keyword": "airtel", "category": "Bills & Utilities"},
+    {"keyword": "jio recharge", "category": "Bills & Utilities"},
+    {"keyword": "broadband", "category": "Bills & Utilities"},
+    {"keyword": "gas bill", "category": "Bills & Utilities"},
+    {"keyword": "water bill", "category": "Bills & Utilities"},
+    # Health
+    {"keyword": "apollo", "category": "Health"},
+    {"keyword": "pharmacy", "category": "Health"},
+    {"keyword": "medplus", "category": "Health"},
+    {"keyword": "1mg", "category": "Health"},
+    {"keyword": "pharmeasy", "category": "Health"},
+    {"keyword": "hospital", "category": "Health"},
+    {"keyword": "doctor", "category": "Health"},
+]
+
 def seed_default_categories(db: Session, user_id: int):
-    """Create default categories if user has none."""
+    """Create default categories and auto-tag rules if user has none."""
     existing = db.query(models.Category).filter(models.Category.user_id == user_id).count()
     if existing > 0:
         return
+    # Seed categories
     for cat in DEFAULT_CATEGORIES:
         db.add(models.Category(**cat, user_id=user_id))
+    db.commit()
+
+    # Seed auto-tag rules — map keywords to the just-created categories
+    cat_map = {c.name: c.id for c in db.query(models.Category).filter(models.Category.user_id == user_id).all()}
+    existing_rules = db.query(models.AutoTagRule).filter(models.AutoTagRule.user_id == user_id).count()
+    if existing_rules > 0:
+        return
+    for rule in DEFAULT_AUTO_TAG_RULES:
+        cat_id = cat_map.get(rule["category"])
+        if cat_id:
+            db.add(models.AutoTagRule(keyword=rule["keyword"], category_id=cat_id, user_id=user_id))
     db.commit()
 
 def get_categories(db: Session, user_id: int):

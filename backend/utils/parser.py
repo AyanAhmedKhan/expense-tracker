@@ -5,6 +5,120 @@ from datetime import datetime
 import io
 import re
 
+ICICI_TX_ROW_RE = re.compile(
+    r"^(?P<serial>\d+)\s+(?P<date>\d{1,2}[./-]\d{1,2}[./-]\d{4})(?:\s+(?P<description>.*?))?\s+(?P<amount>[0-9,]+(?:\.\d{1,2})?)\s+(?P<balance>[0-9,]+(?:\.\d{1,2})?)$"
+)
+
+ICICI_TX_HEAD_RE = re.compile(
+    r"^(UPI|NEFT|IMPS|RTGS|CAM|ATM|POS|BBPS|BIL|BPAY|RCHG|INFT|INF|VPS|PAYC|PAVC|LNPY|SGB|NFS|CASH|ACH|ECOM|IB|TRF)([/\-].*|\s.*|$)",
+    re.IGNORECASE,
+)
+
+ICICI_NOISE_PREFIXES = (
+    "statement of transactions",
+    "your base branch:",
+    "transaction withdrawal deposit balance",
+    "s no. cheque number transaction remarks",
+    "date amount (inr) amount (inr) (inr)",
+    "www.icici.bank.in",
+    "please call from your registered mobile number",
+    "never share your otp",
+    "legends for transactions in your account statement",
+    "sincerly",
+    "team icici bank",
+)
+
+
+def _normalize_pdf_line(line: str) -> str:
+    return re.sub(r"\s+", " ", line or "").strip()
+
+
+def _is_icici_noise_line(line: str) -> bool:
+    normalized = _normalize_pdf_line(line)
+    if not normalized:
+        return True
+    lowered = normalized.lower()
+    if lowered.isdigit():
+        return True
+    return any(lowered.startswith(prefix) for prefix in ICICI_NOISE_PREFIXES)
+
+
+def _is_icici_tx_head_line(line: str) -> bool:
+    normalized = _normalize_pdf_line(line)
+    return bool(ICICI_TX_HEAD_RE.match(normalized))
+
+
+def _finalize_icici_pdf_transaction(current_tx, transactions, previous_balance):
+    if not current_tx or not current_tx.get("date"):
+        return previous_balance
+
+    description = " ".join(current_tx.get("description_lines", [])).strip()
+    if not description:
+        return previous_balance
+
+    amount = current_tx.get("amount")
+    balance = current_tx.get("balance")
+    txn_amount = amount if amount is not None else 0.0
+
+    if previous_balance is not None and balance is not None:
+        delta = round(balance - previous_balance, 2)
+        if abs(delta) > 0.01:
+            txn_amount = abs(delta)
+            if delta > 0:
+                txn_amount = -txn_amount
+
+    transactions.append({
+        "date": current_tx["date"],
+        "description": description,
+        "amount": txn_amount,
+        "source": "ICICI PDF",
+    })
+    return balance if balance is not None else previous_balance
+
+
+def _parse_icici_pdf_text(text: str, transactions, current_tx=None, previous_balance=None):
+    lines = text.splitlines()
+    for raw in lines:
+        line = _normalize_pdf_line(raw)
+        if _is_icici_noise_line(line):
+            continue
+
+        row_match = ICICI_TX_ROW_RE.match(line)
+        if row_match:
+            if current_tx and current_tx.get("has_anchor"):
+                previous_balance = _finalize_icici_pdf_transaction(current_tx, transactions, previous_balance)
+                current_tx = None
+
+            if current_tx is None:
+                current_tx = {"description_lines": []}
+
+            date_val = parse_date(row_match.group("date"))
+            amount_val = parse_amount(row_match.group("amount"))
+            balance_val = parse_amount(row_match.group("balance"))
+            description = row_match.group("description")
+
+            current_tx["date"] = date_val
+            current_tx["amount"] = amount_val
+            current_tx["balance"] = balance_val
+            current_tx["has_anchor"] = True
+            if description:
+                current_tx["description_lines"].append(description)
+            continue
+
+        if _is_icici_tx_head_line(line):
+            if current_tx and current_tx.get("has_anchor"):
+                previous_balance = _finalize_icici_pdf_transaction(current_tx, transactions, previous_balance)
+                current_tx = None
+            if current_tx is None:
+                current_tx = {"description_lines": []}
+            current_tx["description_lines"].append(line)
+            continue
+
+        if current_tx is not None:
+            current_tx.setdefault("description_lines", []).append(line)
+
+    return current_tx, previous_balance
+
 def generate_transaction_hash(date: datetime, description: str, amount: float) -> str:
     # Create a unique hash based on date, description, and amount
     data = f"{date.isoformat()}{description}{amount}"
@@ -28,7 +142,7 @@ def parse_date(date_str):
     # Clean the date string
     date_str = date_str.strip()
     # Try common formats including the ICICI format like "1/10/2025", "2/10/2025", "13-10-2025"
-    formats = ['%d/%m/%Y', '%d-%m-%Y', '%Y-%m-%d', '%d-%b-%Y', '%-d/%-m/%Y', '%-d-%-m-%Y']
+    formats = ['%d/%m/%Y', '%d-%m-%Y', '%d.%m.%Y', '%Y-%m-%d', '%d-%b-%Y', '%-d/%-m/%Y', '%-d-%-m-%Y']
     for fmt in formats:
         try:
             return datetime.strptime(date_str, fmt)
@@ -37,7 +151,7 @@ def parse_date(date_str):
     
     # Try without leading zeros
     try:
-        parts = date_str.replace('-', '/').split('/')
+        parts = re.split(r'[./-]', date_str)
         if len(parts) == 3:
             day, month, year = parts
             return datetime(int(year), int(month), int(day))
@@ -49,52 +163,62 @@ def parse_date(date_str):
 def parse_pdf(file_content: bytes):
     transactions = []
     try:
+        current_tx = None
+        previous_balance = None
         with pdfplumber.open(io.BytesIO(file_content)) as pdf:
             for page in pdf.pages:
                 table = page.extract_table()
-                if not table:
+                page_transactions = []
+                if table:
+                    # Try the structured table path first for PDFs that expose clean cells.
+                    header_row = None
+                    for row in table:
+                        if row and any("Withdrawal" in str(c) for c in row):
+                            header_row = row
+                            break
+                    if header_row:
+                        col_map = {name: idx for idx, name in enumerate(header_row)}
+                        date_idx = col_map.get('Value Date', col_map.get('Transaction Date', 1))
+                        desc_idx = col_map.get('Transaction Remarks', 4)
+                        withdrawal_idx = col_map.get('Withdrawal\nAmount(INR)', col_map.get('Withdrawal Amount(INR)', 5))
+                        deposit_idx = col_map.get('Deposit\nAmount(INR)', col_map.get('Deposit Amount(INR)', 6))
+                    else:
+                        date_idx, desc_idx, withdrawal_idx, deposit_idx = 1, 4, 5, 6
+
+                    for row in table:
+                        if not row or row == header_row:
+                            continue
+                        if date_idx >= len(row) or desc_idx >= len(row):
+                            continue
+                        if not row[date_idx] or not row[desc_idx]:
+                            continue
+                        date_val = parse_date(str(row[date_idx]))
+                        description = str(row[desc_idx]).replace('\n', ' ').strip()
+                        withdrawals = parse_amount(row[withdrawal_idx]) if withdrawal_idx < len(row) else 0.0
+                        deposits = parse_amount(row[deposit_idx]) if deposit_idx < len(row) else 0.0
+                        if withdrawals > 0 and description and date_val:
+                            page_transactions.append({
+                                "date": date_val,
+                                "description": description,
+                                "amount": withdrawals,
+                                "source": "ICICI PDF"
+                            })
+                        if deposits > 0 and description and date_val:
+                            page_transactions.append({
+                                "date": date_val,
+                                "description": description,
+                                "amount": -deposits,
+                                "source": "ICICI PDF"
+                            })
+
+                if page_transactions:
+                    transactions.extend(page_transactions)
                     continue
-                # Find header row
-                header_row = None
-                for row in table:
-                    if row and any("Withdrawal" in str(c) for c in row):
-                        header_row = row
-                        break
-                # Map column indices
-                if header_row:
-                    col_map = {name: idx for idx, name in enumerate(header_row)}
-                    date_idx = col_map.get('Value Date', col_map.get('Transaction Date', 1))
-                    desc_idx = col_map.get('Transaction Remarks', 4)
-                    withdrawal_idx = col_map.get('Withdrawal\nAmount(INR)', col_map.get('Withdrawal Amount(INR)', 5))
-                    deposit_idx = col_map.get('Deposit\nAmount(INR)', col_map.get('Deposit Amount(INR)', 6))
-                else:
-                    # Fallback to default indices
-                    date_idx, desc_idx, withdrawal_idx, deposit_idx = 1, 4, 5, 6
-                # Process rows
-                for row in table:
-                    if not row or row == header_row:
-                        continue
-                    # Skip empty or non-transaction rows
-                    if not row[date_idx] or not row[desc_idx]:
-                        continue
-                    date_val = parse_date(str(row[date_idx]))
-                    description = str(row[desc_idx]).replace('\n', ' ').strip()
-                    withdrawals = parse_amount(row[withdrawal_idx]) if withdrawal_idx < len(row) else 0.0
-                    deposits = parse_amount(row[deposit_idx]) if deposit_idx < len(row) else 0.0
-                    if withdrawals > 0 and description and date_val:
-                        transactions.append({
-                            "date": date_val,
-                            "description": description,
-                            "amount": withdrawals,
-                            "source": "ICICI PDF"
-                        })
-                    if deposits > 0 and description and date_val:
-                        transactions.append({
-                            "date": date_val,
-                            "description": description,
-                            "amount": -deposits,
-                            "source": "ICICI PDF"
-                        })
+
+                page_text = page.extract_text() or ""
+                current_tx, previous_balance = _parse_icici_pdf_text(page_text, transactions, current_tx, previous_balance)
+
+        previous_balance = _finalize_icici_pdf_transaction(current_tx, transactions, previous_balance)
     except Exception as e:
         print(f"Error parsing PDF: {e}")
         import traceback
