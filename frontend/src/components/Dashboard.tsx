@@ -2,6 +2,49 @@ import React, { useEffect, useState } from 'react';
 import { getSummary, getExpenses, Summary, Expense } from '../api/endpoints';
 import { TrendingUp, CheckCircle, Clock, Calendar, PieChart, BarChart3, ArrowUpRight } from 'lucide-react';
 import { format, parseISO, subMonths, isSameMonth } from 'date-fns';
+import { Skeleton } from './ui/skeleton';
+
+const DashboardSkeleton: React.FC = () => (
+    <div className="space-y-6">
+        <div className="space-y-2">
+            <Skeleton className="h-6 w-36" />
+            <Skeleton className="h-4 w-72" />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                    <div className="flex items-center gap-4">
+                        <Skeleton className="h-12 w-12 rounded-full" />
+                        <div className="flex-1 space-y-2">
+                            <Skeleton className="h-3 w-24" />
+                            <Skeleton className="h-6 w-20" />
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="mt-6 h-64 w-full rounded-xl" />
+            </div>
+            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <Skeleton className="h-6 w-40" />
+                <div className="mt-6 space-y-3">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                        <div key={index} className="flex items-center gap-3">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-3 flex-1" />
+                            <Skeleton className="h-4 w-16" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    </div>
+);
 
 const Dashboard: React.FC = () => {
     const [summary, setSummary] = useState<Summary | null>(null);
@@ -26,7 +69,7 @@ const Dashboard: React.FC = () => {
         fetchData();
     }, []);
 
-    if (loading || !summary) return <div className="p-8 text-center text-gray-500 dark:text-gray-400">Loading dashboard...</div>;
+    if (loading || !summary) return <DashboardSkeleton />;
 
     // --- Analytics Calculations ---
 

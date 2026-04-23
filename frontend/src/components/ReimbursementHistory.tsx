@@ -1,6 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { getReimbursements, getReimbursementItems, Reimbursement, ReimbursedItem } from '../api/endpoints';
 import { format } from 'date-fns';
+import { Skeleton } from './ui/skeleton';
+
+const ReimbursementHistorySkeleton: React.FC = () => (
+    <div className="space-y-6">
+        <div className="space-y-2">
+            <Skeleton className="h-6 w-52" />
+            <Skeleton className="h-4 w-80" />
+        </div>
+
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div className="hidden md:block space-y-3">
+                {Array.from({ length: 5 }).map((_, index) => (
+                    <div key={index} className="grid grid-cols-[180px_140px_1fr] gap-4 rounded-lg border border-gray-100 p-4 dark:border-gray-700">
+                        <Skeleton className="h-5 w-28" />
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-5 w-3/4" />
+                    </div>
+                ))}
+            </div>
+
+            <div className="space-y-3 md:hidden">
+                {Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="rounded-lg border border-gray-100 p-4 dark:border-gray-700">
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-28" />
+                            <Skeleton className="h-5 w-20" />
+                            <Skeleton className="h-4 w-3/4" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </div>
+);
 
 const ReimbursementHistory: React.FC = () => {
     const [reimbursements, setReimbursements] = useState<Reimbursement[]>([]);
@@ -20,7 +54,7 @@ const ReimbursementHistory: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Reimbursement History</h2>
 
             {loading ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">Loading history...</div>
+                <ReimbursementHistorySkeleton />
             ) : (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                     {/* Desktop Table */}

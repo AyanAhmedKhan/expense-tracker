@@ -3,6 +3,57 @@ import { getExpenses, createReimbursement, deleteExpense, bulkDeleteExpenses, de
 import { format } from 'date-fns';
 import clsx from 'clsx';
 import { Trash2, Pencil, X, Check, Download, RefreshCw, Tag, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
+import { Skeleton } from './ui/skeleton';
+
+const ExpenseListSkeleton: React.FC = () => (
+    <div className="space-y-6">
+        <div className="space-y-2">
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-4 w-80" />
+        </div>
+
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                {Array.from({ length: 4 }).map((_, index) => (
+                    <Skeleton key={index} className="h-10 rounded-lg" />
+                ))}
+            </div>
+            <div className="mt-4 flex gap-3">
+                <Skeleton className="h-11 w-32 rounded-lg" />
+                <Skeleton className="h-11 w-24 rounded-lg" />
+            </div>
+        </div>
+
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div className="space-y-3 lg:hidden">
+                {Array.from({ length: 5 }).map((_, index) => (
+                    <div key={index} className="rounded-lg border border-gray-100 p-4 dark:border-gray-700">
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="space-y-2 flex-1">
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-5 w-3/4" />
+                                <Skeleton className="h-4 w-40" />
+                            </div>
+                            <Skeleton className="h-8 w-16 rounded-full" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="hidden lg:block overflow-x-auto">
+                <div className="min-w-[900px] space-y-3">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                        <div key={index} className="grid grid-cols-[40px_120px_1fr_120px_120px_100px_100px_96px] gap-4 rounded-lg border border-gray-100 p-4 dark:border-gray-700">
+                            {Array.from({ length: 8 }).map((__, cellIndex) => (
+                                <Skeleton key={cellIndex} className="h-5 w-full" />
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    </div>
+);
 
 const ExpenseList: React.FC = () => {
     const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -393,7 +444,7 @@ const ExpenseList: React.FC = () => {
             </div>
 
             {loading ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">Loading expenses...</div>
+                <ExpenseListSkeleton />
             ) : (
                 <>
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
