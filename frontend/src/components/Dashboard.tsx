@@ -59,7 +59,7 @@ const Dashboard: React.FC = () => {
                     getExpenses({ page: 1, per_page: 1000, sort_by: 'date', order: 'desc' })
                 ]);
                 setSummary(summaryData);
-                setExpenses(expensesResult.items);
+                setExpenses(Array.isArray(expensesResult.items) ? expensesResult.items : []);
             } catch (error) {
                 console.error('Failed to fetch dashboard data', error);
             } finally {
@@ -71,11 +71,13 @@ const Dashboard: React.FC = () => {
 
     if (loading || !summary) return <DashboardSkeleton />;
 
+    const safeExpenses = Array.isArray(expenses) ? expenses : [];
+
     // --- Analytics Calculations ---
 
     // 1. Last Uploaded (Proxy: Max created_at or date)
-    const lastUploaded = expenses.length > 0
-        ? expenses.reduce((max, e) => {
+    const lastUploaded = safeExpenses.length > 0
+        ? safeExpenses.reduce((max, e) => {
             const date = e.created_at ? new Date(e.created_at) : new Date(e.date);
             return date > max ? date : max;
         }, new Date(0))
@@ -83,7 +85,7 @@ const Dashboard: React.FC = () => {
 
     // 2. Category Breakdown
     const categories: Record<string, number> = {};
-    expenses.forEach(e => {
+    safeExpenses.forEach(e => {
         if (e.amount < 0) return; // Skip credits
         const desc = e.description.toLowerCase();
         let category = 'Other';
@@ -105,7 +107,7 @@ const Dashboard: React.FC = () => {
     // 3. Monthly Trends (Last 6 months)
     const last6Months = Array.from({ length: 6 }, (_, i) => subMonths(new Date(), i)).reverse();
     const monthlyData = last6Months.map(date => {
-        const monthExpenses = expenses.filter(e => isSameMonth(parseISO(e.date), date) && e.amount > 0);
+        const monthExpenses = safeExpenses.filter(e => isSameMonth(parseISO(e.date), date) && e.amount > 0);
         const total = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
         return { month: format(date, 'MMM'), total };
     });
@@ -113,7 +115,7 @@ const Dashboard: React.FC = () => {
 
     // 4. Most Paid (Top Descriptions)
     const descriptionTotals: Record<string, number> = {};
-    expenses.forEach(e => {
+    safeExpenses.forEach(e => {
         if (e.amount < 0) return;
         const desc = e.description.trim(); // Use exact description
         descriptionTotals[desc] = (descriptionTotals[desc] || 0) + e.amount;

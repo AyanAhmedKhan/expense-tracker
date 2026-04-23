@@ -1,5 +1,7 @@
 import client from './client';
 
+const asArray = <T,>(value: T[] | null | undefined): T[] => Array.isArray(value) ? value : [];
+
 // ──────────────────────────────────────
 // TYPES
 // ──────────────────────────────────────
@@ -123,7 +125,10 @@ export interface ExpenseFilters {
 
 export const getExpenses = async (params?: ExpenseFilters) => {
     const response = await client.get<PaginatedExpenses>('/expenses/', { params });
-    return response.data;
+    return {
+        ...response.data,
+        items: asArray(response.data?.items),
+    };
 };
 
 export const updateExpense = async (id: number, data: {
@@ -191,12 +196,12 @@ export const createReimbursement = async (expenseIds: number[], note?: string) =
 
 export const getReimbursements = async () => {
     const response = await client.get<Reimbursement[]>('/reimbursements/');
-    return response.data;
+    return asArray(response.data);
 };
 
 export const getReimbursementItems = async (reimbursementId: number) => {
     const response = await client.get<ReimbursedItem[]>(`/reimbursements/${reimbursementId}/items`);
-    return response.data;
+    return asArray(response.data);
 };
 
 // ──────────────────────────────────────
@@ -214,7 +219,7 @@ export const getSummary = async () => {
 
 export const getCategories = async () => {
     const response = await client.get<Category[]>('/categories/');
-    return response.data;
+    return asArray(response.data);
 };
 
 export const createCategory = async (data: { name: string; color?: string; icon?: string }) => {
@@ -233,7 +238,7 @@ export const deleteCategory = async (id: number) => {
 
 export const getAutoTagRules = async () => {
     const response = await client.get<AutoTagRule[]>('/categories/auto-tag-rules');
-    return response.data;
+    return asArray(response.data);
 };
 
 export const createAutoTagRule = async (data: { keyword: string; category_id: number }) => {

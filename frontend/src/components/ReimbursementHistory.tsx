@@ -39,13 +39,16 @@ const ReimbursementHistorySkeleton: React.FC = () => (
 const ReimbursementHistory: React.FC = () => {
     const [reimbursements, setReimbursements] = useState<Reimbursement[]>([]);
     const [loading, setLoading] = useState(false);
+    const [itemsLoading, setItemsLoading] = useState(false);
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [items, setItems] = useState<ReimbursedItem[]>([]);
+    const safeReimbursements = Array.isArray(reimbursements) ? reimbursements : [];
+    const safeItems = Array.isArray(items) ? items : [];
 
     useEffect(() => {
         setLoading(true);
         getReimbursements()
-            .then(setReimbursements)
+            .then((data) => setReimbursements(Array.isArray(data) ? data : []))
             .finally(() => setLoading(false));
     }, []);
 
@@ -68,13 +71,18 @@ const ReimbursementHistory: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                                {reimbursements.map((item) => (
+                                {safeReimbursements.map((item) => (
                                     <React.Fragment key={item.id}>
                                         <tr className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer" onClick={async () => {
-                                            if (expandedId === item.id) { setExpandedId(null); setItems([]); return; }
+                                            if (expandedId === item.id) { setExpandedId(null); setItems([]); setItemsLoading(false); return; }
                                             setExpandedId(item.id);
-                                            const data = await getReimbursementItems(item.id);
-                                            setItems(data);
+                                            setItemsLoading(true);
+                                            try {
+                                                const data = await getReimbursementItems(item.id);
+                                                setItems(Array.isArray(data) ? data : []);
+                                            } finally {
+                                                setItemsLoading(false);
+                                            }
                                         }}>
                                             <td className="p-4 text-sm text-gray-600 dark:text-gray-300">
                                                 {format(new Date(item.date), 'dd MMM yyyy HH:mm')}
@@ -92,7 +100,7 @@ const ReimbursementHistory: React.FC = () => {
                                                     <div className="bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
                                                         <div className="p-4">
                                                             <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Items reimbursed</h4>
-                                                            {items.length === 0 ? (
+                                                            {safeItems.length === 0 ? (
                                                                 <div className="text-sm text-gray-500 dark:text-gray-400">No items found.</div>
                                                             ) : (
                                                                 <div className="overflow-x-auto">
@@ -106,7 +114,7 @@ const ReimbursementHistory: React.FC = () => {
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                                                                            {items.map(it => (
+                                                                            {safeItems.map(it => (
                                                                                 <tr key={it.id}>
                                                                                     <td className="p-2 text-gray-600 dark:text-gray-300">{format(new Date(it.date), 'dd MMM yyyy')}</td>
                                                                                     <td className="p-2 text-gray-900 dark:text-white">{it.description}</td>
@@ -131,15 +139,20 @@ const ReimbursementHistory: React.FC = () => {
 
                     {/* Mobile Cards */}
                     <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-700">
-                        {reimbursements.map((item) => (
+                        {safeReimbursements.map((item) => (
                             <div key={item.id} className="p-4">
                                 <div
                                     className="flex justify-between items-start cursor-pointer"
                                     onClick={async () => {
-                                        if (expandedId === item.id) { setExpandedId(null); setItems([]); return; }
+                                        if (expandedId === item.id) { setExpandedId(null); setItems([]); setItemsLoading(false); return; }
                                         setExpandedId(item.id);
-                                        const data = await getReimbursementItems(item.id);
-                                        setItems(data);
+                                        setItemsLoading(true);
+                                        try {
+                                            const data = await getReimbursementItems(item.id);
+                                            setItems(Array.isArray(data) ? data : []);
+                                        } finally {
+                                            setItemsLoading(false);
+                                        }
                                     }}
                                 >
                                     <div>
@@ -171,11 +184,13 @@ const ReimbursementHistory: React.FC = () => {
                                 {expandedId === item.id && (
                                     <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                                         <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Items Reimbursed</h4>
-                                        {items.length === 0 ? (
+                                        {itemsLoading ? (
                                             <p className="text-sm text-gray-500">Loading items...</p>
+                                        ) : safeItems.length === 0 ? (
+                                            <p className="text-sm text-gray-500">No items found.</p>
                                         ) : (
                                             <div className="space-y-3">
-                                                {items.map(it => (
+                                                {safeItems.map(it => (
                                                     <div key={it.id} className="text-sm">
                                                         <div className="flex justify-between text-gray-900 dark:text-white">
                                                             <span>{it.description}</span>
@@ -194,7 +209,7 @@ const ReimbursementHistory: React.FC = () => {
                             </div>
                         ))}
                     </div>
-                    {reimbursements.length === 0 && (
+                    {safeReimbursements.length === 0 && (
                         <div className="p-8 text-center text-gray-500 dark:text-gray-400">No reimbursement history.</div>
                     )}
                 </div>

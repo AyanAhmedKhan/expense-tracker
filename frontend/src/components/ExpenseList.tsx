@@ -88,6 +88,8 @@ const ExpenseList: React.FC = () => {
     const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
     const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
     const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+    const safeExpenses = Array.isArray(expenses) ? expenses : [];
+    const safeCategories = Array.isArray(categories) ? categories : [];
 
     const buildFilters = useCallback((): ExpenseFilters => ({
         page,
@@ -107,7 +109,7 @@ const ExpenseList: React.FC = () => {
         setLoading(true);
         getExpenses(buildFilters())
             .then((data: PaginatedExpenses) => {
-                setExpenses(data.items);
+                setExpenses(Array.isArray(data.items) ? data.items : []);
                 setTotal(data.total);
                 setTotalPages(data.pages);
             })
@@ -130,10 +132,10 @@ const ExpenseList: React.FC = () => {
     };
 
     const selectAll = () => {
-        if (selectedIds.length === expenses.length) {
+        if (selectedIds.length === safeExpenses.length) {
             setSelectedIds([]);
         } else {
-            setSelectedIds(expenses.map(e => e.id));
+            setSelectedIds(safeExpenses.map(e => e.id));
         }
     };
 
@@ -142,7 +144,7 @@ const ExpenseList: React.FC = () => {
         if (selectedIds.length === 0) return;
         setReimbursing(true);
         try {
-            const debitIds = expenses.filter(e => e.amount > 0 && selectedIds.includes(e.id)).map(e => e.id);
+            const debitIds = safeExpenses.filter(e => e.amount > 0 && selectedIds.includes(e.id)).map(e => e.id);
             if (debitIds.length === 0) {
                 alert('Please select debit expenses (credits cannot be reimbursed).');
                 return;
@@ -454,7 +456,7 @@ const ExpenseList: React.FC = () => {
                                 <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                                     <tr>
                                         <th className="p-4 w-10">
-                                            <input type="checkbox" checked={expenses.length > 0 && selectedIds.length === expenses.length} onChange={selectAll}
+                                            <input type="checkbox" checked={safeExpenses.length > 0 && selectedIds.length === safeExpenses.length} onChange={selectAll}
                                                 className="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-blue-500" />
                                         </th>
                                         <th className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Date</th>
@@ -467,7 +469,7 @@ const ExpenseList: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                                    {expenses.map((expense) => (
+                                    {safeExpenses.map((expense) => (
                                         <tr key={expense.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                             <td className="p-4">
                                                 <input type="checkbox" checked={selectedIds.includes(expense.id)} onChange={() => toggleSelection(expense.id)}
@@ -501,7 +503,7 @@ const ExpenseList: React.FC = () => {
                                                     <select value={editCategory ?? ''} onChange={(e) => setEditCategory(e.target.value ? Number(e.target.value) : null)}
                                                         className="border border-blue-400 dark:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
                                                         <option value="">None</option>
-                                                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                        {safeCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                                     </select>
                                                 ) : expense.category ? (
                                                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: expense.category.color + '20', color: expense.category.color }}>
@@ -511,7 +513,7 @@ const ExpenseList: React.FC = () => {
                                                     <select value="" onChange={(e) => { if (e.target.value) handleCategoryChange(expense.id, Number(e.target.value)); }}
                                                         className="text-xs text-gray-400 dark:text-gray-500 bg-transparent border-0 cursor-pointer focus:outline-none hover:text-gray-600 dark:hover:text-gray-300">
                                                         <option value="">+ Add</option>
-                                                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                        {safeCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                                     </select>
                                                 )}
                                             </td>
@@ -555,7 +557,7 @@ const ExpenseList: React.FC = () => {
 
                         {/* Mobile Cards */}
                         <div className="lg:hidden space-y-4 p-4 bg-gray-50 dark:bg-gray-900/50">
-                            {expenses.map((expense) => (
+                            {safeExpenses.map((expense) => (
                                 <div key={expense.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col gap-3">
                                     <div className="flex justify-between items-start gap-3">
                                         <div className="flex-1 min-w-0">
@@ -592,7 +594,7 @@ const ExpenseList: React.FC = () => {
                             ))}
                         </div>
 
-                        {expenses.length === 0 && (
+                        {safeExpenses.length === 0 && (
                             <div className="p-8 text-center text-gray-500 dark:text-gray-400">No expenses found. Upload a statement to get started.</div>
                         )}
                     </div>
